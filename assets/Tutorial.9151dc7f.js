@@ -1,1 +1,0 @@
-import{M as t}from"./index.e2bec608.js";import{o as a,B as e,w as o,a as r}from"./vendor.5fd544b7.js";const s=r("p",null,"Tutorial",-1),p={setup(c){return(n,l)=>(a(),e(t,null,{default:o(()=>[s]),_:1}))}};export{p as default};
