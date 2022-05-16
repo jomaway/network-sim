@@ -128,6 +128,10 @@ export class Server implements Service {
     return SID.DHCPServer
   };
 
+  setConf(conf) {
+    this.conf = conf
+  }
+
   getState(): ServiceState {
     return this.state
   }

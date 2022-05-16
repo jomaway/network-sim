@@ -1,5 +1,5 @@
 import { mdiSleep } from "@mdi/js"
-import { Connector } from "../components/Connector"
+import { Connector, NIC } from "../components/Connector"
 import { Host } from "../components/Host"
 import { Node } from "../components/Node"
 import { sleep } from "../Helper"
@@ -59,7 +59,7 @@ export class ArpHandler {
     return this.arpCache.has(ip)
   }
 
-  async resolve(ip: IPv4Addr) : Promise<string> {
+  async resolve(ip: IPv4Addr, iface: NIC) : Promise<string> {
     // check if there is an entry in the arp table
     if (this.knows(ip)) {
       return this.arpCache.get(ip)
@@ -70,7 +70,7 @@ export class ArpHandler {
         TM.debug("ARP.resolve() continue")
       }
       const o = this.owner as Host  // todo pass interface to fn
-      this.sendArpRequest(o.getMacAddr(), o.getIpAddr(), ip, o.getDefaultNIC())
+      this.sendArpRequest(iface.getMacAddr(), o.getIpAddr(iface.id), ip, iface)
       
       const timerID = TM.setTimer(() => this.pending = false, 10 )
       await this.waitforResult()

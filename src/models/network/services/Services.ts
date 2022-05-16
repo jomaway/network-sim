@@ -5,6 +5,8 @@ export enum SID {
   ICMP,
   DHCPClient,
   DHCPServer,
+  DNSServer,
+  DNSClient,
 }
 
 export interface Service {

@@ -1,7 +1,7 @@
 import { Node, NodeID, NodeType } from "./Node"
 import { NodeIcon } from "./Drawable"
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "../protocols/Ethernet";
-import { Connectable, Connector, ConnectorID } from "./Connector";
+import { Connectable, Connector, ConnectorID, NIC } from "./Connector";
 import { Host } from "./Host";
 import {getUniqueMacAddr} from "../NetworkManager";
 import { Service, SID } from "../services/Services";
@@ -9,51 +9,27 @@ import { ICMPHandler } from "../services/ICMP";
 import { ArpHandler, Packet as ArpPacket } from "../protocols/ARP";
 import { Packet as IpPacket } from "../protocols/IPv4";
 import { IPv4Config } from "./Adressable";
+import { NATHandler } from "../protocols/NAT";
 
 export class Router extends Host {
-  name: string;
-  //lanMacAddr: MacAddr;
-  //wanMacAddr: MacAddr;
-  arpService: ArpHandler;
-  ipConfig: Map<string, IPv4Config>
-  services: Map<SID,Service>
+  natService: NATHandler;
 
 
   constructor(id: NodeID) {
     super(id, `Router-${id}`);
-    //this.name = `Router-${id}`
-    //this.lanMacAddr = getUniqueMacAddr()
-    //this.wanMacAddr = getUniqueMacAddr()
-    //this.ipConfig = new Map()
     
-    this.connectors.length = 0;
+    this.connectors.length = 0;  // remove default connector from host constructor
     this.addNIC("LAN") // add one Connector for LAN
     this.addNIC("WAN") // add second Connector for WAN
+
+    this.natService = new NATHandler(this)
 
     // overwrite Node Drawable
     this.drawable = new NodeIcon("#14B8A6","rect")
 
-    // add ArpHandler
-    //this.arpService = new ArpHandler(this)
-
-    // register services
-    // this.services = new Map()
   }
 
   /* ---------- Handle services  ----------*/
-
-  registerService(service: Service) {
-    // todo! warn if this service was already registerd.
-    this.services.set(service.getServiceID(), service);
-  }
-
-  useService(sID: SID) {
-    return this.services.get(sID);
-  }
-
-  hasService(sID: SID) {
-    return this.services.has(sID)
-  }
 
   getName(): string {
     return this.name
@@ -83,7 +59,16 @@ export class Router extends Host {
     } else { // FrameType.IP
       if (this.getMacAddr("LAN") === frame.dst) {
         // handle ipv4 packets
-        if ( frame.payload instanceof IpPacket ) this.handleIpPacket(frame.payload, "LAN")
+        if ( frame.payload instanceof IpPacket ) {
+          const packet = frame.payload 
+          // check if destination is the router or another network
+          if (packet.dst !== this.getLANConf().addr) {
+            const translatedPacket = this.natService.translateOutgoing(packet)
+            this.sendWAN(translatedPacket)
+          } else {
+            this.handleIpPacket(packet, this.getLANConnector().id)
+          }
+        }
       } 
     }
     // else frame will be droped!
@@ -96,45 +81,29 @@ export class Router extends Host {
     } else { // FrameType.IP
       if (this.getMacAddr("WAN") === frame.dst) {
         // handle ipv4 packets
-        if ( frame.payload instanceof IpPacket ) this.handleIpPacket(frame.payload, "WAN")
+        if ( frame.payload instanceof IpPacket ) {
+          const packet = frame.payload
+          if (packet.dst === this.getWANConf().addr) {
+            const translatedPacket = this.natService.translateIncoming(packet)
+            this.sendLAN(translatedPacket)
+          } else {
+            // Drop Packet // maybee support Port forwarding in future
+          }
+          
+        }
       }
     }
     // else frame will be droped!
   }
 
-  handleIpPacket(packet: IpPacket, orig: ConnectorID) {
-    this.tm?.emit("NodeActive",`${this.name} rx packet over ${orig}`)
-    const newPacket = this.performNAT(packet)
-    if (orig === "LAN") {
-      this.sendWAN(newPacket)
-    } else if (orig === "WAN") {
-      this.sendLAN(newPacket)
-    }
+  async sendWAN(packet: IpPacket) {
+    const frame = new Frame(this.getMacAddr("WAN"), await this.arpService.resolve(packet.dst, this.getWANConnector()) ,FrameType.IPv4, packet)
+    this.transmit(this.getWANConnector(), frame)
   }
 
-  performNAT(packet: IpPacket): IpPacket {
-    return packet
-  }
-
-  sendWAN(packet: IpPacket) {
-    
-    if (this.arpService.knows(packet.dst)) {
-      const frame = new Frame(this.getMacAddr("WAN"), this.arpService.resolve(packet.dst) ,FrameType.IPv4, packet)
-      this.transmit(this.getWANConnector(), frame)
-    } else {
-      this.arpService.sendArpRequest(this.getMacAddr("WAN"), this.getWANConf().addr, packet.dst, this.getWANConnector())
-      this.arpService.setOnResolveCb(() => { this.sendWAN(packet) })
-    }
-  }
-
-  sendLAN(packet: IpPacket) {
-    if (this.arpService.knows(packet.dst)) {
-      const frame = new Frame(this.getMacAddr("LAN"), this.arpService.resolve(packet.dst) ,FrameType.IPv4, packet)
-      this.transmit(this.getLANConnector(), frame)
-    } else {
-      this.arpService.sendArpRequest(this.getMacAddr("LAN"), this.getLANConf().addr, packet.dst, this.getLANConnector())
-      this.arpService.setOnResolveCb(() => { this.sendLAN(packet) })
-    }
+  async sendLAN(packet: IpPacket) {
+    const frame = new Frame(this.getMacAddr("LAN"), await this.arpService.resolve(packet.dst, this.getLANConnector()) ,FrameType.IPv4, packet)
+    this.transmit(this.getLANConnector(), frame)
   }
 
   setLAN(conf: IPv4Config) {
@@ -153,12 +122,12 @@ export class Router extends Host {
     return this.ipConfig.get("WAN")
   }
 
-  getLANConnector() {
-    return this.getConnectorByID("LAN")
+  getLANConnector(): NIC {
+    return this.getConnectorByID("LAN") as NIC
   }
 
-  getWANConnector() {
-    return this.getConnectorByID("WAN")
+  getWANConnector() : NIC {
+    return this.getConnectorByID("WAN") as NIC
   }
 
   /* ---------- Storage methods  ----------*/

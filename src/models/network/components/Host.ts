@@ -195,7 +195,7 @@ export class Host extends Node implements Adressable {
       this.tm?.log("Destination not in the same network")
       dstIp = this.getGateway()
     } 
-    const dstMac = await this.arpService.resolve(dstIp)
+    const dstMac = await this.arpService.resolve(dstIp, this.getDefaultNIC())
     if (!dstMac) {
       this.tm?.log(`Could not resolve the mac for ip ${dstIp} Packet will be droped`);
       return // drop packet
