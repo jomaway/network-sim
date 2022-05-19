@@ -1,1 +1,0 @@
-import{M as a}from"./index.df7adfd7.js";import{o,B as r,w as s,a as e}from"./vendor.5fd544b7.js";const t=e("div",{class:"m-2 border-dashed border-2 border-gray-500 p-4 rounded"},[e("h1",null,"This is an about page")],-1),p={setup(c){return(d,n)=>(o(),r(a,null,{default:s(()=>[t]),_:1}))}};export{p as default};
