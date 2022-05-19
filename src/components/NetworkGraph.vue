@@ -130,7 +130,7 @@ const getNodeContextMenuItems = (nodeID) => {
     {
       name: "Remove",
       onSelect: () => {
-        this.nm.removeNode(node);
+        networkStore.manager.removeNode(node);
       },
     },
   ];
@@ -439,6 +439,35 @@ const calcLinkCenterPos = (link) => {
           fill="#ffffff"
         >
           {{ host.getCIDR() }}
+        </text>
+      </svg>
+      <svg
+        v-for="host in networkStore.manager.getAllRouters()"
+        :key="host.id"
+        :x="host.drawable.pos.x - 60 * scale"
+        :y="host.drawable.pos.y - 40 * scale"
+      >
+        <rect width="100" height="24" rx="15" ry="15" fill="#aed6f1" />
+        <text
+          :x="100 / 2"
+          :y="24 / 2"
+          font-size="12px"
+          dominant-baseline="central"
+          text-anchor="middle"
+          fill="#ffffff"
+        >
+          {{ host.getCIDR("LAN") }}
+        </text>
+        <rect y="57" x="40" width="100" height="24" rx="15" ry="15" fill="#aed6f1" />
+        <text
+          :x="100 / 2 + 40"
+          :y="24 / 2 + 57"
+          font-size="12px"
+          dominant-baseline="central"
+          text-anchor="middle"
+          fill="#ffffff"
+        >
+          {{ host.getCIDR("WAN") }}
         </text>
       </svg>
     </template>

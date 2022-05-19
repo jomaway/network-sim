@@ -110,6 +110,10 @@ export class NetworkManager {
     return this.getAllFromType(NodeType.Host).map((node) => node as Host)
   }
 
+  getAllRouters() : Router[] {
+    return this.getAllFromType(NodeType.Router).map((node) => node as Router)
+  }
+
   randomIPs() {
     const hosts = this.getAllHosts()
     const tmp = []
