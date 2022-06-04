@@ -36,3 +36,16 @@ export class IPv4Config {
     this.dns = '';
   }
 }
+
+export function isValidIp(value:string) {
+  const parts = value.trim().split('.')
+  if (parts.length !== 4) return false
+  //const nums = parts.map((numStr: string) => parseInt(numStr,10))
+  
+  for (let i=0; i <4; i++) {
+    const num = parseInt(parts[i])
+    if (isNaN(num)) return false
+    if (num < 0 || num > 255) return false
+  }
+  return true
+}

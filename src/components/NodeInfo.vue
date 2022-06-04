@@ -93,7 +93,8 @@ const save = () => {
           v-model.trim="ipConf.snm"
           :placeholder="ipConf.snm ?? 'enter new snm'"
           @keyup.enter="onEnter"
-          class="rounded px-1 w-full"
+          class="rounded px-1 w-full invalid:bg-red-300"
+          pattern="^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$"
         />
       </div>
       <div class="flex gap-1">
@@ -102,7 +103,8 @@ const save = () => {
           v-model.trim="ipConf.gw"
           :placeholder="ipConf.gw ?? 'enter new gateway'"
           @keyup.enter="onEnter"
-          class="rounded px-1 w-full"
+          class="rounded px-1 w-full invalid:bg-red-300"
+          pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
         />
       </div>
       <div class="flex gap-1">
@@ -111,7 +113,8 @@ const save = () => {
           v-model.trim="ipConf.dns"
           :placeholder="ipConf.dns ?? 'enter new dns'"
           @keyup.enter="onEnter"
-          class="rounded px-1 w-full"
+          class="rounded px-1 w-full invalid:bg-red-300"
+          pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
         />
       </div>
     </div>
