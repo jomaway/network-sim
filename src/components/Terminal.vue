@@ -75,7 +75,7 @@ async function runCommand(input) {
       output.value = ["Command not found: " + input];
       break;
   }
-};
+}
 
 const onKeyUp = (event) => {
   switch (event.key) {

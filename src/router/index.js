@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Network from "../views/Network.vue";
+import NetworkView from "../views/NetworkView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,12 +7,12 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: Network,
+      component: NetworkView,
     },
     {
       path: "/network",
       name: "network",
-      component: Network,
+      component: NetworkView,
     },
     {
       path: "/tutorial",

@@ -8,6 +8,9 @@ import FloatMenu from "@/components/FloatMenu.vue";
 import { LinkColor, NodeColor } from "@/models/network/components/Drawable";
 import { NodeType } from "../models/network/components/Node";
 import { Server as DHCPServer } from "@/models/network/services/DHCP";
+import AddLinkDialog from "./AddLinkDialog.vue";
+import ModalDialog from "./ModalDialog.vue";
+import FilePicker from "./FilePicker.vue";
 
 defineProps({
   eventHandlers: Object,
@@ -141,10 +144,13 @@ const getNodeContextMenuItems = (nodeID) => {
     node.getNodeID() !== networkStore.getSelectedNode.getNodeID()
   ) {
     items.push({
-      name: "Add Link to selected",
+      name: "Add Link to selected Node",
       onSelect: () => {
         try {
-          networkStore.manager.addLink(node, networkStore.getSelectedNode);
+          if (networkStore.getSelectedNode.hasFreeConnector())
+            showLinkDialog(node, networkStore.getSelectedNode);
+          else toast.error("Selected Node has no free connector.");
+          //networkStore.manager.addLink(node, networkStore.getSelectedNode);
         } catch (err) {
           toast.error(err.message);
         }
@@ -259,41 +265,35 @@ const eventHandlers = {
 
 const menuItems = [
   {
-    name: "Remove selected",
-    onSelect: () => {
-      for (const nodeID of networkStore.selected.nodes) {
-        networkStore.manager.removeNodeWithID(nodeID);
-      }
-      for (const linkID of networkStore.selected.links) {
-        networkStore.manager.removeLinkWithID(linkID);
-      }
-      toast.warning("All selected nodes removed.");
-    },
-  },
-  {
-    name: "Open Recent",
+    name: "Restore Recent",
     onSelect: () => {
       networkStore.loadRecentNetwork();
       toast.success("Network loaded");
     },
   },
   {
-    name: "Save Network",
+    name: "Quick Save Network",
     onSelect: () => {
       networkStore.saveNetwork();
       toast.success("Network saved");
     },
   },
   {
-    name: "Save As File",
+    name: "Save to File",
     onSelect: () => {
       networkStore.saveNetworkAsFile();
     },
   },
   {
+    name: "Load from File",
+    onSelect: () => {
+      console.warn("not implemented!!!");
+      loadModal.value.open = true;
+    },
+  },
+  {
     name: "Export Graph as SVG",
     onSelect: () => {
-      //networkStore.exportGraphAsSvg();
       if (!graphRef.value) {
         const text = graphRef.value.getAsSvg();
         const url = URL.createObjectURL(
@@ -381,9 +381,49 @@ const calcLinkCenterPos = (link) => {
     y: start.y + (end.y - start.y) * 0.5,
   };
 };
+
+const linkDialogRef = ref();
+const linkDialog = reactive({
+  open: false,
+  from: null,
+  to: null,
+});
+
+function showLinkDialog(from, to) {
+  linkDialog.from = from;
+  linkDialog.to = to;
+  linkDialog.open = true;
+}
+
+function onLinkDialogResolve(from, to) {
+  try {
+    networkStore.manager.addLink(from, to);
+  } catch (err) {
+    toast.error(err.message);
+  }
+  linkDialog.open = false; // close dialog
+}
+
+const loadModal = ref({
+  open: false,
+  file: null,
+});
 </script>
 
 <template>
+  <modal-dialog :open="linkDialog.open">
+    <div class="flex flex-col gap-2">
+      <h3 class="border-b-2 border-blue-500">Select interfaces for link</h3>
+      <add-link-dialog
+        v-if="linkDialog.open"
+        ref="linkDialogRef"
+        :from="linkDialog.from"
+        :to="linkDialog.to"
+        @close="linkDialog.open = false"
+        @resolve="onLinkDialogResolve"
+      />
+    </div>
+  </modal-dialog>
   <v-network-graph
     ref="graphRef"
     v-model:selected-nodes="networkStore.selected.nodes"
@@ -422,7 +462,7 @@ const calcLinkCenterPos = (link) => {
         <title>{{ link.lastFrame }}</title>
       </svg>
     </template>
-    <template #batches="{ scale }">
+    <template #batches="{ scale }" v-if="networkStore.settings.showIpBatches">
       <svg
         v-for="host in networkStore.manager.getAllHosts()"
         :key="host.id"
@@ -458,7 +498,15 @@ const calcLinkCenterPos = (link) => {
         >
           {{ host.getCIDR("LAN") }}
         </text>
-        <rect y="57" x="40" width="100" height="24" rx="15" ry="15" fill="#aed6f1" />
+        <rect
+          y="57"
+          x="40"
+          width="100"
+          height="24"
+          rx="15"
+          ry="15"
+          fill="#aed6f1"
+        />
         <text
           :x="100 / 2 + 40"
           :y="24 / 2 + 57"
@@ -480,4 +528,18 @@ const calcLinkCenterPos = (link) => {
     @close="contextMenuData.show = false"
   />
   <float-menu ref="floatMenuRef" :menu-items="menuItems" />
+  <modal-dialog :open="loadModal.open">
+    <div class="flex flex-col gap-2">
+      <h3 class="border-b-2 border-blue-500">Load Network From File</h3>
+      <file-picker v-model="loadModal.file" />
+      <button class="bg-red-400 p-2 rounded" @click="loadModal.open = false">Cancel</button>
+      <button
+        v-if="loadModal.file"
+        class="bg-green-500 p-2 rounded"
+        @click="networkStore.loadNetworkFromFile(loadModal.file)"
+      >
+        Load
+      </button>
+    </div>
+  </modal-dialog>
 </template>

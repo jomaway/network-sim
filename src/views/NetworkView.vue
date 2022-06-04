@@ -2,7 +2,6 @@
 import MainSection from "../components/MainSection.vue";
 import { useNetworkStore } from "@/stores/network";
 import Terminal from "@/components/Terminal.vue";
-//import { useToast } from "vue-toastification";
 import NetworkGraph from "../components/NetworkGraph.vue";
 import FloatElement from "../components/FloatElement.vue";
 import NodeInfo from "../components/NodeInfo.vue";
@@ -10,7 +9,6 @@ import SimulationControls from "../components/SimulationControls.vue";
 import { computed } from "vue";
 
 const networkStore = useNetworkStore();
-//const toast = useToast();
 
 const terminalNode = computed(() =>
   networkStore.manager.getNodeByID(networkStore.terminal.context.nodeID)
@@ -32,17 +30,17 @@ const closeTerminal = () => {
       :class="networkStore.isTerminalVisible ? 'h-2/3' : 'h-full'"
     >
       <main-section class="relative h-full">
-        <NetworkGraph />
-        <FloatElement
+        <network-graph />
+        <float-element
           v-if="networkStore.nodeInfo.show"
           class="bg-amber-400 rounded"
         >
-          <NodeInfo
+          <node-info
             :node="editNode"
             @close="networkStore.nodeInfo.show = false"
           />
-        </FloatElement>
-        <SimulationControls
+        </float-element>
+        <simulation-controls
           class="absolute top-10 left-20 bg-amber-400 rounded p-2"
         />
       </main-section>

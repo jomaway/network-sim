@@ -3,7 +3,7 @@ import { Host } from "./components/Host";
 import { Switch } from "./components/Switch";
 import { Router } from "./components/Router";
 import { Link, LinkID } from "./components/Link";
-import { Connectable } from "./components/Connector";
+import { Connectable, Connector } from "./components/Connector";
 import TM, { TrafficManager } from "./TrafficManager";
 
 export class NetworkManager {
@@ -58,10 +58,10 @@ export class NetworkManager {
     return r
   }
 
-  addLink(from: Connectable, to: Connectable) {
+  addLink(from: Connector | Connectable, to: Connector | Connectable) {
     // Get Free connectors
-    const c1 = from.getFreeConnector()
-    const c2 = to.getFreeConnector()
+    const c1 = from instanceof Connector ? from : from.getNextFreeConnector()
+    const c2 = to instanceof Connector ? to : to.getNextFreeConnector()
     
     if ( c1 && c2 ) {
       const link = new Link(`l${this.getNextID()}`, c1,c2)

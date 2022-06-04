@@ -35,13 +35,17 @@ export abstract class Node implements Connectable, Storeable {
     return this.connectors.filter((c) => !c.isConnected()).length > 0
   }
 
-  getFreeConnector() : Connector {
+  getNextFreeConnector() : Connector {
     for (const c of this.connectors) {
       if (!c.isConnected()) {
         return c
       }
     }
     return null
+  }
+
+  getFreeConnectors(): Array<Connector> {
+    return this.connectors.filter((c) => !c.isConnected())
   }
 
   getConnectorByID(id:string) {

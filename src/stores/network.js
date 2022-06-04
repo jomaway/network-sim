@@ -26,6 +26,9 @@ export const useNetworkStore = defineStore({
           nodeID: -1,
         },
       },
+      settings: {
+        showIpBatches: true,
+      },
     };
   },
   getters: {

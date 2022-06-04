@@ -8,7 +8,8 @@ export interface Connectable {
   getNodeID: () => NodeID;
 
   hasFreeConnector: () => boolean;
-  getFreeConnector: () => Connector;
+  getNextFreeConnector: () => Connector;
+  getFreeConnectors: () => Array<Connector>;
   getConnectorList: () => Array<string>;
   getConnectorByID: (id: ConnectorID) => Connector;
 
