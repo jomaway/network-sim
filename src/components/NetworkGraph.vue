@@ -3,11 +3,14 @@ import { ref, reactive, computed } from "vue";
 import { useToast } from "vue-toastification";
 import { useNetworkStore } from "../stores/network";
 import * as vNG from "v-network-graph";
-import ContextMenu from "@/components/ContextMenu.vue";
+
+import { LinkColor, NodeColor } from "@/core/network/components/Drawable";
+import { NodeType } from "@/core/network/components/Node";
+import { Internet } from "@/core/network/components/Internet";
+import { Server as DHCPServer } from "@/core/network/services/DHCP";
+
 import FloatMenu from "@/components/FloatMenu.vue";
-import { LinkColor, NodeColor } from "@/models/network/components/Drawable";
-import { NodeType } from "../models/network/components/Node";
-import { Server as DHCPServer } from "@/models/network/services/DHCP";
+import ContextMenu from "@/components/ContextMenu.vue";
 import AddLinkDialog from "./AddLinkDialog.vue";
 import ModalDialog from "./ModalDialog.vue";
 import FilePicker from "./FilePicker.vue";
@@ -124,6 +127,15 @@ const getViewContextMenuItems = (pos) => {
         networkStore.updateLayoutForNode(r);
       },
     },
+    {
+      name: "Internet",
+      onSelect: () => {
+        const i = new Internet(-10);
+        i.drawable.pos = pos;
+        networkStore.manager.addNode(i);
+        networkStore.updateLayoutForNode(i);
+      }
+    }
   ];
 };
 

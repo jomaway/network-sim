@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { Node } from "../models/network/components/Node";
+import { Node } from "@/core/network/components/Node";
 
 const props = defineProps({
   node: {

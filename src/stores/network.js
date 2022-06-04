@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
-import { NetworkManager } from "@/models/network/NetworkManager";
-import { NodeType } from "@/models/network/components/Node";
+import { NetworkManager } from "@/core/network/NetworkManager";
+import { NodeType } from "@/core/network/components/Node";
 
 export const useNetworkStore = defineStore({
   id: "network",
