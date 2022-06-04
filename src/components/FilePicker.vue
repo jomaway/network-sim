@@ -3,13 +3,12 @@ defineProps({
   modelValue: File,
   text: {
     type: String,
-    default: "Upload",
+    default: "Select",
   },
 });
 
 const emit = defineEmits(["update:modelValue"]);
 const handleFileChange = (e) => {
-  console.log("test", e.target.files[0]);
   emit("update:modelValue", e.target.files[0]);
 };
 </script>
@@ -17,7 +16,9 @@ const handleFileChange = (e) => {
 <template>
   <div class="flex items-stretch justify-start relative">
     <label class="inline-flex">
-      <span class="bg-teal-400 p-2 rounded-l-md">{{ text }}</span>
+      <span class="bg-teal-400 p-2 rounded-l-md">{{
+        modelValue ? "File:" : text
+      }}</span>
       <input type="file" @change="handleFileChange" class="hidden" />
     </label>
     <div>

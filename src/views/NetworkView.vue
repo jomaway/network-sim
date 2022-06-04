@@ -1,11 +1,11 @@
 <script setup>
-import MainSection from "../components/MainSection.vue";
+import MainSection from "@/components/MainSection.vue";
 import { useNetworkStore } from "@/stores/network";
 import Terminal from "@/components/Terminal.vue";
-import NetworkGraph from "../components/NetworkGraph.vue";
-import FloatElement from "../components/FloatElement.vue";
-import NodeInfo from "../components/NodeInfo.vue";
-import SimulationControls from "../components/SimulationControls.vue";
+import NetworkGraph from "@/components/NetworkGraph.vue";
+import FloatElement from "@/components/FloatElement.vue";
+import NodeInfo from "@/components/NodeInfo.vue";
+import SimulationControls from "@/components/SimulationControls.vue";
 import { computed } from "vue";
 
 const networkStore = useNetworkStore();

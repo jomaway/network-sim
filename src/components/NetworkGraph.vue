@@ -11,15 +11,17 @@ import { Server as DHCPServer } from "@/core/network/services/DHCP";
 
 import FloatMenu from "@/components/FloatMenu.vue";
 import ContextMenu from "@/components/ContextMenu.vue";
-import AddLinkDialog from "./AddLinkDialog.vue";
-import ModalDialog from "./ModalDialog.vue";
-import FilePicker from "./FilePicker.vue";
+import AddLinkDialog from "@/components/dialogs/AddLinkDialog.vue";
+import ModalDialog from "@/components/dialogs/ModalDialog.vue";
+import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
+import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
 
 defineProps({
   eventHandlers: Object,
 });
 
 const networkStore = useNetworkStore();
+const dialogWrapperRef = ref();
 
 //networkStore.$subscribe((mutation, state) => {
 //console.log("STORE mutation detected", mutation, state);
@@ -134,8 +136,8 @@ const getViewContextMenuItems = (pos) => {
         i.drawable.pos = pos;
         networkStore.manager.addNode(i);
         networkStore.updateLayoutForNode(i);
-      }
-    }
+      },
+    },
   ];
 };
 
@@ -298,9 +300,15 @@ const menuItems = [
   },
   {
     name: "Load from File",
-    onSelect: () => {
-      console.warn("not implemented!!!");
-      loadModal.value.open = true;
+    onSelect: async () => {
+      const file = await dialogWrapperRef.value.openDialog(FilePickerDialog);
+      if (file !== "cancel") {
+        try {
+          networkStore.loadNetworkFromFile(file);
+        } catch (error) {
+          toast.error(error.message);
+        }
+      }
     },
   },
   {
@@ -415,11 +423,6 @@ function onLinkDialogResolve(from, to) {
   }
   linkDialog.open = false; // close dialog
 }
-
-const loadModal = ref({
-  open: false,
-  file: null,
-});
 </script>
 
 <template>
@@ -540,18 +543,5 @@ const loadModal = ref({
     @close="contextMenuData.show = false"
   />
   <float-menu ref="floatMenuRef" :menu-items="menuItems" />
-  <modal-dialog :open="loadModal.open">
-    <div class="flex flex-col gap-2">
-      <h3 class="border-b-2 border-blue-500">Load Network From File</h3>
-      <file-picker v-model="loadModal.file" />
-      <button class="bg-red-400 p-2 rounded" @click="loadModal.open = false">Cancel</button>
-      <button
-        v-if="loadModal.file"
-        class="bg-green-500 p-2 rounded"
-        @click="networkStore.loadNetworkFromFile(loadModal.file)"
-      >
-        Load
-      </button>
-    </div>
-  </modal-dialog>
+  <dialog-wrapper ref="dialogWrapperRef" />
 </template>

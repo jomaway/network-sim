@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { Node } from "@/core/network/components/Node";
+import IconClose from "./icons/IconClose.vue";
 
 const props = defineProps({
   node: {
@@ -49,12 +50,10 @@ const save = () => {
   <div class="flex flex-col gap-2 p-2 overflow-y-auto">
     <div class="flex justify-between">
       <h3 class="font-bold">Node Settings:</h3>
-      <button
-        class="w-6 h-6 text-center align-middle bg-gray-600 text-white rounded-full"
+      <icon-close
         @click="close"
-      >
-        x
-      </button>
+        class="w-6 h-6 text-center align-middle bg-gray-700 text-white rounded-full"
+      />
     </div>
     <p>ID: {{ node.getNodeID() }}</p>
     <div>

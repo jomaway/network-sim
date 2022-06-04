@@ -123,6 +123,11 @@ export const useNetworkStore = defineStore({
     updateLayoutForNode(node) {
       this.layouts.nodes[node.id] = node.drawable.pos;
     },
+    updateLayouts() {
+      this.manager.nodes.forEach((node) => {
+        this.updateLayoutForNode(node);
+      });
+    },
     saveNetwork() {
       localStorage.setItem(
         "netsim-network-manager",
@@ -134,9 +139,7 @@ export const useNetworkStore = defineStore({
         this.manager.loadNetwork(
           JSON.parse(localStorage.getItem("netsim-network-manager"))
         );
-        this.manager.nodes.forEach((node) => {
-          this.updateLayoutForNode(node);
-        });
+        this.updateLayouts();
       } else {
         console.warn("No network found");
       }
@@ -155,12 +158,13 @@ export const useNetworkStore = defineStore({
       window.URL.revokeObjectURL(url);
     },
     loadNetworkFromFile(file) {
-      console.log("try to load network from ", file);
       const reader = new FileReader();
 
       reader.onload = (event) => {
         console.log("Reading file successfully");
-        this.manager.loadNetwork(event.target.result);
+        console.log("FILE", event.target.result);
+        this.manager.loadNetwork(JSON.parse(event.target.result));
+        this.updateLayouts();
         this.saveNetwork();
       };
 
