@@ -12,9 +12,9 @@ import { Server as DHCPServer } from "@/core/network/services/DHCP";
 import FloatMenu from "@/components/FloatMenu.vue";
 import ContextMenu from "@/components/ContextMenu.vue";
 import AddLinkDialog from "@/components/dialogs/AddLinkDialog.vue";
-import ModalDialog from "@/components/dialogs/ModalDialog.vue";
 import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
 import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
+import SettingsDialog from "./dialogs/SettingsDialog.vue";
 
 defineProps({
   eventHandlers: Object,
@@ -22,10 +22,6 @@ defineProps({
 
 const networkStore = useNetworkStore();
 const dialogWrapperRef = ref();
-
-//networkStore.$subscribe((mutation, state) => {
-//console.log("STORE mutation detected", mutation, state);
-//});
 
 const toast = useToast();
 
@@ -155,16 +151,18 @@ const getNodeContextMenuItems = (nodeID) => {
   if (
     node.hasFreeConnector() &&
     networkStore.isNodeSelected &&
-    node.getNodeID() !== networkStore.getSelectedNode.getNodeID()
+    node.getNodeID() !== networkStore.getSelectedNode.getNodeID() &&
+    networkStore.getSelectedNode.hasFreeConnector()
   ) {
     items.push({
       name: "Add Link to selected Node",
-      onSelect: () => {
+      onSelect: async () => {
         try {
-          if (networkStore.getSelectedNode.hasFreeConnector())
-            showLinkDialog(node, networkStore.getSelectedNode);
-          else toast.error("Selected Node has no free connector.");
-          //networkStore.manager.addLink(node, networkStore.getSelectedNode);
+          const { from, to } = await dialogWrapperRef.value.openDialog(
+            AddLinkDialog,
+            { from: node, to: networkStore.getSelectedNode }
+          );
+          networkStore.manager.addLink(from, to);
         } catch (err) {
           toast.error(err.message);
         }
@@ -286,7 +284,7 @@ const menuItems = [
     },
   },
   {
-    name: "Quick Save Network",
+    name: "Quick Save",
     onSelect: () => {
       networkStore.saveNetwork();
       toast.success("Network saved");
@@ -328,6 +326,12 @@ const menuItems = [
     },
   },
   {
+    name: "Settings",
+    onSelect: async () => {
+      await dialogWrapperRef.value.openDialog(SettingsDialog);
+    },
+  },
+  {
     name: "Reset",
     onSelect: () => {
       networkStore.reset();
@@ -336,14 +340,20 @@ const menuItems = [
   },
 ];
 
+networkStore.$subscribe(() => {
+  configs.view.grid.visible = networkStore.settings.showGrid;
+  configs.view.panEnabled = networkStore.settings.panEnabled;
+  configs.view.zoomEnabled = networkStore.settings.zoomEnabled;
+});
+
 const configs = reactive(
   vNG.defineConfigs({
     view: {
-      panEnabled: true,
-      zoomEnabled: true,
+      panEnabled: networkStore.settings.panEnabled,
+      zoomEnabled: networkStore.settings.zoomEnabled,
       scalingObjects: true,
       grid: {
-        visible: true,
+        visible: networkStore.settings.showGrid,
       },
     },
     node: {
@@ -401,44 +411,9 @@ const calcLinkCenterPos = (link) => {
     y: start.y + (end.y - start.y) * 0.5,
   };
 };
-
-const linkDialogRef = ref();
-const linkDialog = reactive({
-  open: false,
-  from: null,
-  to: null,
-});
-
-function showLinkDialog(from, to) {
-  linkDialog.from = from;
-  linkDialog.to = to;
-  linkDialog.open = true;
-}
-
-function onLinkDialogResolve(from, to) {
-  try {
-    networkStore.manager.addLink(from, to);
-  } catch (err) {
-    toast.error(err.message);
-  }
-  linkDialog.open = false; // close dialog
-}
 </script>
 
 <template>
-  <modal-dialog :open="linkDialog.open">
-    <div class="flex flex-col gap-2">
-      <h3 class="border-b-2 border-blue-500">Select interfaces for link</h3>
-      <add-link-dialog
-        v-if="linkDialog.open"
-        ref="linkDialogRef"
-        :from="linkDialog.from"
-        :to="linkDialog.to"
-        @close="linkDialog.open = false"
-        @resolve="onLinkDialogResolve"
-      />
-    </div>
-  </modal-dialog>
   <v-network-graph
     ref="graphRef"
     v-model:selected-nodes="networkStore.selected.nodes"

@@ -28,6 +28,9 @@ export const useNetworkStore = defineStore({
       },
       settings: {
         showIpBatches: true,
+        showGrid: true,
+        panEnabled: true,
+        zoomEnabled: true,
       },
     };
   },

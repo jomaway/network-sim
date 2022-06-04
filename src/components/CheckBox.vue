@@ -20,8 +20,11 @@ const computedValue = computed({
 </script>
 
 <template>
-  <div class="flex gap-2 items-center">
-    <input type="checkbox" v-model="computedValue" />
-    <p>{{ label }}</p>
-  </div>
+  <label class="inline-flex items-center mt-3">
+    <input
+      type="checkbox"
+      class="form-checkbox h-5 w-5 text-teal-600 rounded"
+      v-model="computedValue"
+    /><span class="ml-2 text-gray-700">{{ label }}</span>
+  </label>
 </template>
