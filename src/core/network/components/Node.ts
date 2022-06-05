@@ -104,7 +104,8 @@ export abstract class Node implements Connectable, Storeable {
 export enum NodeType {
   Switch,
   Host,
-  Router
+  Router,
+  Internet
 }
 
 

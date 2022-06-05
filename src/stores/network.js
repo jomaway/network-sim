@@ -46,6 +46,8 @@ export const useNetworkStore = defineStore({
               ? "#FFBF00"
               : node.drawable.color,
           dType: node.drawable.shape,
+          size: node.drawable.size,
+          icon: "&#xe320",
         };
       });
       return nodes;

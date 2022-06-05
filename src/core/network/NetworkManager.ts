@@ -5,18 +5,38 @@ import { Router } from "./components/Router";
 import { Link, LinkID } from "./components/Link";
 import { Connectable, Connector } from "./components/Connector";
 import TM, { TrafficManager } from "./TrafficManager";
+import { Internet } from "./components/Cloud";
 
 export class NetworkManager {
   nodes: Array<Node>
   links: Array<Link>
   lastUsedID: NodeID
   tm: TrafficManager
+  cloud: Internet
 
   constructor() {
     this.nodes = []
     this.links = []
     this.lastUsedID = 0
     this.tm = TM
+  }
+
+  hasCloud() : boolean{
+    return this.nodes.filter((node) => node.getNodeType() === NodeType.Internet).length === 1
+  }
+
+  addCloud() : Internet {
+    if (!this.hasCloud()) {
+      const cloud = new Internet(-100);
+      this.nodes.push(cloud);
+      return cloud
+    } else {
+      return this.getCloud()
+    }
+  }
+
+  getCloud() : Internet {
+    return this.nodes.find((node) => node.id === -100) as Internet
   }
 
   addNode(node: Node) {
@@ -63,12 +83,9 @@ export class NetworkManager {
     const c1 = from instanceof Connector ? from : from.getNextFreeConnector()
     const c2 = to instanceof Connector ? to : to.getNextFreeConnector()
     
-    if ( c1 && c2 ) {
+    if ( c1 && c2 && !c1.isConnected() && !c2.isConnected()) {
       const link = new Link(`l${this.getNextID()}`, c1,c2)
-      //link.attachTrafficManager(this.tm)
       this.links.push(link)
-
-      //console.log("Link from",c1.getNodeID(),"to",c2.getNodeID(),"added");
     } else {
       throw new Error("Could not add link")
     }

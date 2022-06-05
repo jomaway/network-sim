@@ -29,6 +29,7 @@ export class Link {
 
   connect() {
     // Connect Link to Connectors
+    // todo! check if already connected
     this.c1.connect(this)
     this.c2.connect(this)
   }

@@ -178,7 +178,6 @@ export class Server implements Service, Storeable {
   getNextFreeIpAddr() {
     // todo! this function is just a small workaround for testing. does not cover all cases.
     let next = this.conf.first
-    const rand = "10.13.200.X".replace(/X/g, () => (Math.floor(Math.random() * 150) + 100).toString());
     while (this.inUse.includes(next)) {
       const parts = next.trim().split('.')
       const nums = parts.map((numStr: string) => parseInt(numStr,10))

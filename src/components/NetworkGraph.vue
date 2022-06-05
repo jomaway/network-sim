@@ -6,7 +6,6 @@ import * as vNG from "v-network-graph";
 
 import { LinkColor, NodeColor } from "@/core/network/components/Drawable";
 import { NodeType } from "@/core/network/components/Node";
-import { Internet } from "@/core/network/components/Internet";
 import { Server as DHCPServer } from "@/core/network/services/DHCP";
 
 import FloatMenu from "@/components/FloatMenu.vue";
@@ -69,7 +68,7 @@ const showEdgeContextMenu = (params) => {
 };
 
 const getViewContextMenuItems = (pos) => {
-  return [
+  let items = [
     {
       name: "Add Host",
       onSelect: () => {
@@ -125,16 +124,19 @@ const getViewContextMenuItems = (pos) => {
         networkStore.updateLayoutForNode(r);
       },
     },
-    {
-      name: "Internet",
+  ];
+
+  if (!networkStore.manager.hasCloud()) {
+    items.push({
+      name: "Add Cloud",
       onSelect: () => {
-        const i = new Internet(-10);
+        const i = networkStore.manager.addCloud();
         i.drawable.pos = pos;
-        networkStore.manager.addNode(i);
         networkStore.updateLayoutForNode(i);
       },
-    },
-  ];
+    })
+  }
+  return items;
 };
 
 const getNodeContextMenuItems = (nodeID) => {
@@ -155,7 +157,7 @@ const getNodeContextMenuItems = (nodeID) => {
     networkStore.getSelectedNode.hasFreeConnector()
   ) {
     items.push({
-      name: "Add Link to selected Node",
+      name: "Connect to selected Node",
       onSelect: async () => {
         try {
           const { from, to } = await dialogWrapperRef.value.openDialog(
@@ -231,6 +233,34 @@ const getNodeContextMenuItems = (nodeID) => {
         name: "Edit",
         onSelect: () => {
           networkStore.setEditNode(node.getNodeID());
+        },
+      });
+      if (!node.getConnectorByID("WAN").isConnected()) {
+        items.push({
+          name: "Connect to Cloud",
+          onSelect: () => {
+            try {
+              networkStore.manager.addLink(node.getConnectorByID("WAN"), networkStore.manager.getCloud());
+            } catch (err) {
+              toast.error(err.message);
+            }
+          },
+        });
+      } else {
+        items.push({
+          name: "Get conf from ISP",
+          onSelect: () => {
+            const ipconf = networkStore.manager.getCloud().getDynamicIP();
+            node.setIpConfig(ipconf, "WAN");
+          },
+        });
+      }
+      break;
+    case NodeType.Internet:
+      items.push({
+        name: "Check",
+        onSelect: () => {
+          throw new Error("Method not implemented.");
         },
       });
       break;
@@ -360,7 +390,7 @@ const configs = reactive(
       draggable: true,
       selectable: isNodeSelectable,
       normal: {
-        radius: 26,
+        radius: (node) => node.size,
         width: 60,
         height: 30,
         type: (node) => node.dType,
@@ -425,6 +455,18 @@ const calcLinkCenterPos = (link) => {
     :event-handlers="eventHandlers"
     :layers="layers"
   >
+    <!-- Replace the node component -->
+    <template #override-node="{ nodeId, config, ...slotProps }">
+      <svg viewBox="0 0 512 512" x="-80" y="-60" width="160" height="120" :fill="config.color" v-if="nodeId === '-100'" v-bind="slotProps">
+        <g>
+          <path d="M489.579,254.766c-12.942-16.932-30.829-29.887-50.839-36.933c-0.828-48.454-40.501-87.618-89.148-87.618
+            c-7.618,0-15.213,0.993-22.647,2.958c-12.102-15.076-27.37-27.615-44.441-36.457c-19.642-10.173-40.881-15.331-63.127-15.331
+            c-74.705,0-135.736,59.676-137.931,133.859C33.885,227.82,0,271.349,0,321.107c0,60.383,49.125,109.508,109.508,109.508h292.983
+            C462.875,430.615,512,381.49,512,321.107C512,296.896,504.246,273.956,489.579,254.766z"/>
+        </g>
+      </svg>
+      <!-- Use v-html to interpret escape sequences for icon characters. -->
+    </template>
     <!-- Additional layer -->
     <template #msg="{ scale }" v-if="layers.msg">
       <!--
@@ -505,7 +547,7 @@ const calcLinkCenterPos = (link) => {
           text-anchor="middle"
           fill="#ffffff"
         >
-          {{ host.getCIDR("WAN") }}
+          W: {{ host.getCIDR("WAN") }}
         </text>
       </svg>
     </template>
