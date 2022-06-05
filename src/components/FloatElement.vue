@@ -8,7 +8,7 @@ defineProps({
 </script>
 
 <template>
-  <div ref="floatMenuWrapper" class="absolute right-2 top-2 w-60">
+  <div ref="floatMenuWrapper" class="absolute right-2 top-2">
     <slot />
   </div>
 </template>

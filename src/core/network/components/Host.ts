@@ -4,7 +4,7 @@ import {  Packet, Subnetmask, IPv4Addr } from "../protocols/IPv4"
 import { Node, NodeID, NodeType } from "./Node"
 import { NodeIcon } from "./Drawable"
 import { Connector, ConnectorID, NIC } from "./Connector";
-import { getUniqueMacAddr } from "../NetworkManager";
+import { getUniqueMacAddr, isStoreable } from "../NetworkManager";
 import { TrafficEvent } from "../TrafficManager";
 import { Service, SID } from "../services/Services";
 import { ICMPHandler } from "../services/ICMP";
@@ -247,7 +247,15 @@ export class Host extends Node implements Adressable {
       //n["macAddr"] = this.macAddr
       n["ipConfig"] = Array.from(this.ipConfig, ([name, value]) => ({ name, value }))
       n["services"] = []
-      this.services.forEach((service) => n["services"].push(service.getServiceID()))
+      this.services.forEach((service) => {
+        const serviceData = {
+          id: service.getServiceID(),
+        }
+        if (isStoreable(service)) serviceData["conf"] = service.save()
+
+        n["services"].push(serviceData)
+
+      })
       return n
   }
 
@@ -264,17 +272,19 @@ export class Host extends Node implements Adressable {
       this.connectors[idx] = c;
     })
 
-    data.services.forEach((serviceID: SID) => {
-      switch (serviceID) {
+    data.services.forEach((service: any) => {
+      switch (service.id) {
         case SID.ICMP:
           break;
         case SID.DHCPClient:
           break;
         case SID.DHCPServer:
-          this.registerService(new DHCPServer(this))
+          const dhcp = new DHCPServer(this)
+          dhcp.setConf(service.conf)
+          this.registerService(dhcp)
           break;
         default:
-          console.warn("unknown service ID", serviceID);
+          console.warn("unknown service ID", service.id);
           
           break;
       }

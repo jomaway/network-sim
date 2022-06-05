@@ -1,5 +1,6 @@
 import { IPv4Config } from "../components/Adressable";
 import { Host } from "../components/Host";
+import { Storeable } from "../NetworkManager";
 import { Frame, FrameType, MacAddr } from "../protocols/Ethernet";
 import { IPv4Addr, Packet, Subnetmask } from "../protocols/IPv4";
 import TM from "../TrafficManager";
@@ -99,7 +100,7 @@ export class Client implements Service {
   };
 }
 
-export class Server implements Service {
+export class Server implements Service, Storeable {
   owner: Host
   state: ServiceState
   conf: {
@@ -167,21 +168,37 @@ export class Server implements Service {
   getFreeIpConf(): IPv4Config {
     const config = new IPv4Config()
     config.static = false;
-    config.addr = this.getFreeIpAddr()
+    config.addr = this.getNextFreeIpAddr()
     config.snm = this.conf.snm
     config.gw = this.conf.gw
     config.dns = this.conf.dns
     return config
   }
 
-  getFreeIpAddr() {
+  getNextFreeIpAddr() {
     // todo! this function is just a small workaround for testing. does not cover all cases.
+    let next = this.conf.first
     const rand = "10.13.200.X".replace(/X/g, () => (Math.floor(Math.random() * 150) + 100).toString());
-    if (this.inUse.includes(rand)) {
-      return this.getFreeIpAddr()
-    } else {
-      this.inUse.push(rand)
-      return rand
-    }
+    while (this.inUse.includes(next)) {
+      const parts = next.trim().split('.')
+      const nums = parts.map((numStr: string) => parseInt(numStr,10))
+      nums[3]++;
+      next = nums.join('.')
+
+      if (next === this.conf.last) {
+        throw Error("no free ip adresses")
+      }
+    } 
+      
+    this.inUse.push(next)
+    return next
+  }
+
+  save() : object {
+    return this.conf
+  }
+
+  load(data: object) {
+    this.setConf(data)
   }
 }

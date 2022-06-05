@@ -190,6 +190,10 @@ export interface Storeable {
   load: (data: object) => void 
 }
 
+export function isStoreable(object: any) : object is Storeable {
+  return object.save !== undefined;
+}
+
 export function getUniqueMacAddr() : string {
   // not unique yet, just random
   return "XX:XX:XX:XX:XX:XX".replace(/X/g, () => "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16)));

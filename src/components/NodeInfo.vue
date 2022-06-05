@@ -2,6 +2,8 @@
 import { computed, ref, watch } from "vue";
 import { Node } from "@/core/network/components/Node";
 import IconClose from "./icons/IconClose.vue";
+import IpAddrInputField from "./IpAddrInputField.vue";
+import { SID } from "../core/network/services/Services";
 
 const props = defineProps({
   node: {
@@ -23,7 +25,6 @@ const name = computed({
 });
 
 const ifaceList = computed(() => props.node.getConnectorList());
-
 const ifaceName = ref(ifaceList.value[0]);
 
 const ipConf = computed({
@@ -31,92 +32,64 @@ const ipConf = computed({
   set: (value) => props.node.setIpConfig(value, ifaceName.value),
 });
 
-const onEnter = () => {
-  //save();
-};
+const dhcpConf = computed({
+  get: () => props.node.useService(SID.DHCPServer).conf,
+  set: (value) => props.node.useService(SID.DHCPServer).setConf(value),
+})
+
+const hasDHCPServer = computed(() => props.node.services.has(SID.DHCPServer))
+
 
 const close = () => {
   emit("close");
 };
 
-/*
-const save = () => {
-  toast.success("Node Settings saved");
-};
-*/
 </script>
 
 <template>
   <div class="flex flex-col gap-2 p-2 overflow-y-auto">
-    <div class="flex justify-between">
-      <h3 class="font-bold">Node Settings:</h3>
+    <header class="flex justify-between">
+      <h3 class="font-bold">Node {{ node.getNodeID() }} Settings:</h3>
       <icon-close
         @click="close"
         class="w-6 h-6 text-center align-middle bg-gray-700 text-white rounded-full"
       />
-    </div>
-    <p>ID: {{ node.getNodeID() }}</p>
+    </header>
     <div>
       <span>Name: </span>
       <input
         v-model="name"
         :placeholder="name ?? 'enter new host name'"
-        @keyup.enter="onEnter"
-        class="rounded"
+        class="rounded p-1"
       />
     </div>
-    <div class="flex flex-col gap-1">
-      <span>IP Config: </span>
+
+    <div class="flex justify-between border-t pt-2">
+      <h3 class="font-bold">IP-Config:</h3>
       <select v-model="ifaceName" class="text-sm rounded">
         <option v-for="ifaceName in ifaceList" :key="ifaceName">
           {{ ifaceName }}
         </option>
       </select>
-      <div class="flex gap-1">
-        <p>Static:</p>
-        <p>{{ ipConf.static }}</p>
-      </div>
-      <div class="flex gap-1">
-        <p>Addr:</p>
-        <input
-          v-model.trim="ipConf.addr"
-          :placeholder="ipConf.addr ?? 'enter new ip addr'"
-          @keyup.enter="onEnter"
-          class="rounded px-1 w-full invalid:bg-red-300"
-          pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-        />
-      </div>
-      <div class="flex gap-1">
-        <p>SNM:</p>
-        <input
-          v-model.trim="ipConf.snm"
-          :placeholder="ipConf.snm ?? 'enter new snm'"
-          @keyup.enter="onEnter"
-          class="rounded px-1 w-full invalid:bg-red-300"
-          pattern="^(((255\.){3}(255|254|252|248|240|224|192|128|0+))|((255\.){2}(255|254|252|248|240|224|192|128|0+)\.0)|((255\.)(255|254|252|248|240|224|192|128|0+)(\.0+){2})|((255|254|252|248|240|224|192|128|0+)(\.0+){3}))$"
-        />
-      </div>
-      <div class="flex gap-1">
-        <p>GW:</p>
-        <input
-          v-model.trim="ipConf.gw"
-          :placeholder="ipConf.gw ?? 'enter new gateway'"
-          @keyup.enter="onEnter"
-          class="rounded px-1 w-full invalid:bg-red-300"
-          pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-        />
-      </div>
-      <div class="flex gap-1">
-        <p>DNS:</p>
-        <input
-          v-model.trim="ipConf.dns"
-          :placeholder="ipConf.dns ?? 'enter new dns'"
-          @keyup.enter="onEnter"
-          class="rounded px-1 w-full invalid:bg-red-300"
-          pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-        />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <ip-addr-input-field v-model="ipConf.addr" label="IP-Adresse" />
+      <ip-addr-input-field v-model="ipConf.snm" isMask label="Subnetzmaske" />
+      <ip-addr-input-field v-model="ipConf.gw" label="Gateway" />
+      <ip-addr-input-field v-model="ipConf.dns" label="DNS" />
+      <p class="text-right">Static: {{ ipConf.static ? '✔️' : '❌' }}</p>
+    </div>
+
+    <div class=" border-t pt-2" v-if="hasDHCPServer">
+      <h3 class="font-bold">DHCP-Server:</h3>
+      <div class="flex flex-col gap-1 mt-2">
+        <ip-addr-input-field v-model="dhcpConf.first" label="Range-Start" />
+        <ip-addr-input-field v-model="dhcpConf.last"  label="Range-End" />
+        <ip-addr-input-field v-model="dhcpConf.snm" isMask label="Subnetzmaske" />
+        <ip-addr-input-field v-model="dhcpConf.gw" label="Gateway" />
+        <ip-addr-input-field v-model="dhcpConf.dns" label="DNS" />
       </div>
     </div>
-    <!-- <button class="bg-red-400 rounded p-2 mt-4" @click="save">Save</button> -->
   </div>
 </template>
