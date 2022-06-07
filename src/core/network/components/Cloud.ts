@@ -8,7 +8,7 @@ import { Node, NodeID, NodeType } from "./Node";
 import { Switch } from "./Switch";
 
 
-export class Internet extends Switch {
+export class Cloud extends Switch {
   connections: Array<Link>
   dhcpServer: DHCPServer
 
@@ -33,7 +33,7 @@ export class Internet extends Switch {
   }
 
   getNodeType(): NodeType {
-    return NodeType.Internet
+    return NodeType.Cloud
   }
 
   getDynamicIP() {

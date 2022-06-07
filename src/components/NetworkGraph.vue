@@ -241,6 +241,8 @@ const getNodeContextMenuItems = (nodeID) => {
           onSelect: () => {
             try {
               networkStore.manager.addLink(node.getConnectorByID("WAN"), networkStore.manager.getCloud());
+              const ipconf = networkStore.manager.getCloud().getDynamicIP();
+              node.setIpConfig(ipconf, "WAN");
             } catch (err) {
               toast.error(err.message);
             }

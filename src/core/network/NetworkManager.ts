@@ -5,14 +5,14 @@ import { Router } from "./components/Router";
 import { Link, LinkID } from "./components/Link";
 import { Connectable, Connector } from "./components/Connector";
 import TM, { TrafficManager } from "./TrafficManager";
-import { Internet } from "./components/Cloud";
+import { Cloud } from "./components/Cloud";
 
 export class NetworkManager {
   nodes: Array<Node>
   links: Array<Link>
   lastUsedID: NodeID
   tm: TrafficManager
-  cloud: Internet
+  cloud: Cloud
 
   constructor() {
     this.nodes = []
@@ -22,12 +22,12 @@ export class NetworkManager {
   }
 
   hasCloud() : boolean{
-    return this.nodes.filter((node) => node.getNodeType() === NodeType.Internet).length === 1
+    return this.nodes.filter((node) => node.getNodeType() === NodeType.Cloud).length === 1
   }
 
-  addCloud() : Internet {
+  addCloud() : Cloud {
     if (!this.hasCloud()) {
-      const cloud = new Internet(-100);
+      const cloud = new Cloud(-100);
       this.nodes.push(cloud);
       return cloud
     } else {
@@ -35,12 +35,11 @@ export class NetworkManager {
     }
   }
 
-  getCloud() : Internet {
-    return this.nodes.find((node) => node.id === -100) as Internet
+  getCloud() : Cloud {
+    return this.nodes.find((node) => node.id === -100) as Cloud
   }
 
   addNode(node: Node) {
-    node.attachTrafficManager(this.tm)
     this.nodes.push(node)
   }
 
@@ -151,8 +150,8 @@ export class NetworkManager {
 
     result["links"] = this.links.map((link) => {
       let l = {}
-      l["c1"] = link.c1.getNodeID()
-      l["c2"] = link.c2.getNodeID()
+      l["c1"] = link.c1.owner.getNodeID()
+      l["c2"] = link.c2.owner.getNodeID()
       return l
     })
 
@@ -178,6 +177,8 @@ export class NetworkManager {
         case NodeType.Router:
           n = new Router(node.id)
           break;
+        case NodeType.Cloud:
+          n = this.addCloud()
         default:
           break;
       }

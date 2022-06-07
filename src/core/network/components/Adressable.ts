@@ -1,6 +1,6 @@
 import { MacAddr } from "../protocols/Ethernet";
 import { IPv4Addr, Subnetmask } from "../protocols/IPv4";
-import { ConnectorID } from "./Connector";
+import { Connector, ConnectorID } from "./Connector";
 
 
 export interface Adressable {

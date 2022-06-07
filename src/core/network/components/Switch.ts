@@ -43,7 +43,7 @@ export class Switch extends Node {
     }
   };
 
-  addtoMacTable(portID, macAddr: MacAddr) {
+  addtoMacTable(portID: LinkID, macAddr: MacAddr) {
     this.macTable.has(portID) ? 
       this.macTable.set(portID, [... new Set([macAddr, ...this.macTable.get(portID)])]) :
       this.macTable.set(portID, [macAddr]);

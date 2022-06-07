@@ -17,12 +17,7 @@ export abstract class Node implements Connectable, Storeable {
     this.id = id;
     this.connectors = [];
     this.drawable = null;
-    this.tm = TM
   }
-
-  attachTrafficManager(tm: TrafficManager) {
-    this.tm = tm
-  };
 
   getNodeID() {return this.id}
   isNodeWithID(id: number) { return this.id === id };
@@ -59,7 +54,7 @@ export abstract class Node implements Connectable, Storeable {
   /* layer 2 ethernet transmit method */
   // todo! rethink if this needs to be async here
   async transmit(connector: Connector, frame: Frame) {
-    await this.tm?.notify(TrafficEvent.BeforeTransmit, this)
+    await TM.notify(TrafficEvent.BeforeTransmit, this)
     try {
       connector.tx(frame)
     } catch (e) {
@@ -98,6 +93,7 @@ export abstract class Node implements Connectable, Storeable {
 
     // load drawables
     this.drawable = data.drawable
+    if(!this.drawable.size) this.drawable.size = 26;
   };
 }
 
@@ -105,7 +101,7 @@ export enum NodeType {
   Switch,
   Host,
   Router,
-  Internet
+  Cloud
 }
 
 

@@ -53,9 +53,6 @@ export class Connector {
     this.owner.receive(this, frame)
   }
 
-  getNodeID() {
-    return this.owner.getNodeID()
-  }
 }
 
 export class NIC extends Connector {

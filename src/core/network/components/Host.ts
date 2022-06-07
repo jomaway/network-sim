@@ -9,7 +9,7 @@ import { TrafficEvent } from "../TrafficManager";
 import { Service, SID } from "../services/Services";
 import { ICMPHandler } from "../services/ICMP";
 import { Client as DHCPClient, Server as DHCPServer } from "../services/DHCP";
-import { Adressable, IPv4Config } from "./Adressable";
+import { Adressable, IPv4Config, isValidIp } from "./Adressable";
 import { Octet } from "ip-num";
 
 
@@ -190,6 +190,9 @@ export class Host extends Node implements Adressable {
   /* layer 3 ip send packet */
   async sendPacket(packet: Packet) {
     let dstIp = packet.dst
+    if (!isValidIp(dstIp)) {
+      throw new Error(`can't send packet. ${dstIp} is no valid ip.`)
+    }
     // check if ip is in the same network
     if (!this.isSameNetwork(dstIp) && !this.isIpBroadcast(dstIp)) {
       this.tm?.log("Destination not in the same network")

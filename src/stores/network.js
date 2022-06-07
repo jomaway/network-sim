@@ -56,8 +56,8 @@ export const useNetworkStore = defineStore({
       let edges = {};
       state.manager.links.forEach((link) => {
         edges[link.id] = {
-          source: link.c1.getNodeID(),
-          target: link.c2.getNodeID(),
+          source: link.c1.owner.getNodeID(),
+          target: link.c2.owner.getNodeID(),
           animate: link.active,
           srcmarker: link.c1.id === "WAN" ? "circle" : "none",
           tarmarker:

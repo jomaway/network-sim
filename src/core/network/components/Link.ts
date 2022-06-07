@@ -18,14 +18,11 @@ export class Link {
     this.c1 = c1;
     this.c2 = c2;
     this.connect()
-    this.tm = TM
     this.active = false
     this.lastFrame = null
   }
 
-  attachTrafficManager(tm: TrafficManager) {
-    this.tm = tm;
-  }
+
 
   connect() {
     // Connect Link to Connectors
@@ -53,7 +50,7 @@ export class Link {
     const dest = this.c2;
     this.active = true
     this.lastFrame = frame
-    await this.tm.notify(TrafficEvent.LinkActive, this)
+    await TM.notify(TrafficEvent.LinkActive, this)
     dest.rx(frame)
     this.active=false
   }

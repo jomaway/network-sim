@@ -87,7 +87,7 @@ export class ArpHandler {
   }
 
   sendArpRequest(srcMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr, connector: Connector) {
-    TM.log(`ARP:  Node ${this.owner.getNodeID()} send Request`)
+    TM.log(`ARP:  Node ${this.owner.getNodeID()} (${this.owner.getName()}) send Request`)
     const packet = new Packet(ArpType.Request,srcIp,dstIp, srcMac, ZERO_MAC)
     const frame = new Frame(srcMac,MAC_BROADCAST_ADDR, FrameType.ARP, packet)
     this.owner.transmit(connector,frame)
@@ -95,7 +95,7 @@ export class ArpHandler {
   }
 
   sendArpResponse(srcMac: MacAddr, dstMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr, connector: Connector) {
-    TM.log(`ARP: Node ${this.owner.getNodeID()} send Response`)
+    TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) send Response`)
     const packet = new Packet(ArpType.Response,srcIp, dstIp, srcMac, dstMac)
     const frame = new Frame(srcMac,dstMac, FrameType.ARP, packet)
     this.owner.transmit(connector,frame)
@@ -106,15 +106,15 @@ export class ArpHandler {
     this.arpCache.set(packet.senderIP, packet.senderMAC)
     // check if packet is for themselve.
     if ( packet.targetIP === ownIp) {
-      TM.log(`ARP: Node ${this.owner.getNodeID()} received Request`)
+      TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) received Request`)
       this.sendArpResponse(ownMac, packet.senderMAC, ownIp, packet.senderIP, connector)
     } else {
-      TM.debug(`Drop: Node ${this.owner.getNodeID()} dropped ${JSON.stringify(packet)}`)
+      TM.debug(`Drop: Node ${this.owner.getNodeID()} (${this.owner.getName()}) dropped ${JSON.stringify(packet)}`)
     }
   }
 
   handleArpResponse(packet: Packet) {
-    TM.log(`ARP: Node ${this.owner.getNodeID()} received Response`)
+    TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) received Response`)
     const mac = packet.senderMAC
     const ip = packet.senderIP
     this.arpCache.set(ip,mac)

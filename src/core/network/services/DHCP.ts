@@ -116,11 +116,11 @@ export class Server implements Service, Storeable {
     this.owner = owner
     this.state = ServiceState.idle
     this.conf = {
-      first: "10.13.201.100",
-      last: "10.13.202.200",
-      snm: "255.255.252.0",
-      gw: "10.13.200.1",
-      dns: "10.13.200.2",
+      first: "",
+      last: "",
+      snm: "",
+      gw: "",
+      dns: "",
     }
     this.inUse = []
   }
