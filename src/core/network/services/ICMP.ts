@@ -1,9 +1,9 @@
 import { Service, SID } from "./Services";
-import { Host } from "../components/Host";
 import { IPv4Addr,  Packet } from "../protocols/IPv4";
 import TM from "../TrafficManager";
 import { mdiThumbsUpDown } from "@mdi/js";
 import { sleep } from "../Helper";
+import { AdressableNode } from "../components/NetworkComponents";
 
 const ICMP_REQUEST = Symbol("icmp-req")
 const ICMP_RESPONSE = Symbol("icmp-res")
@@ -15,12 +15,12 @@ enum ResultType {
 }
 
 export class ICMPHandler implements Service {
-  owner: Host
+  node: AdressableNode
   pending: Boolean
   result: ResultType
 
-  constructor(owner: Host ) {
-    this.owner = owner
+  constructor(node: AdressableNode ) {
+    this.node = node
     this.pending = false
     this.result = null
   }
@@ -54,24 +54,24 @@ export class ICMPHandler implements Service {
   };
 
   sendIcmpRequest(to: IPv4Addr) {
-    TM.log(`"ICMP:" ${this.owner.name} send ping request`)
-    const packet = new Packet(this.owner.getIpAddr(), to, SID.ICMP, ICMP_REQUEST.toString())
-    this.owner.sendPacket(packet)
+    TM.log(`"ICMP:" ${this.node.name} send ping request`)
+    const packet = new Packet(this.node.getDefaultIface().getIpAddr(), to, SID.ICMP, ICMP_REQUEST.toString())
+    this.node.ipHandler.sendPacket(packet)
   }
 
   sendIcmpResponse(to: IPv4Addr) {
-    TM.log(`"ICMP:" ${this.owner.name} send ping response`)
-    const packet = new Packet(this.owner.getIpAddr(), to, SID.ICMP, ICMP_RESPONSE.toString())
-    this.owner.sendPacket(packet)
+    TM.log(`"ICMP:" ${this.node.name} send ping response`)
+    const packet = new Packet(this.node.getDefaultIface().getIpAddr(), to, SID.ICMP, ICMP_RESPONSE.toString())
+    this.node.ipHandler.sendPacket(packet)
   }
 
   handleIcmpRequest(packet: Packet) {
-    TM.log(`"ICMP:" ${this.owner.name} rcv ping request`)
+    TM.log(`"ICMP:" ${this.node.name} rcv ping request`)
     this.sendIcmpResponse(packet.src)
   }
 
   handleIcmpResponse(packet: Packet) {
-    TM.log(`"ICMP:" ${this.owner.name} rcv ping response`)
+    TM.log(`"ICMP:" ${this.node.name} rcv ping response`)
     this.result = ResultType.success
   }
 }

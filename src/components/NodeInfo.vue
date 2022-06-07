@@ -1,9 +1,11 @@
 <script setup>
 import { computed, ref, watch } from "vue";
-import { Node } from "@/core/network/components/Node";
+import { Node } from "@/core/network/components/NetworkComponents";
 import IconClose from "./icons/IconClose.vue";
 import IpAddrInputField from "./IpAddrInputField.vue";
 import { SID } from "../core/network/services/Services";
+import { NodeType } from "../core/network/components/NetworkComponents";
+import NetworkInterfaceEdit from "./edits/NetworkInterfaceEdit.vue";
 
 const props = defineProps({
   node: {
@@ -14,7 +16,7 @@ const props = defineProps({
 
 watch(
   () => props.node,
-  () => (ifaceName.value = ifaceList.value[0])
+  () => (iface.value = ifaceList.value[0])
 );
 
 const emit = defineEmits(["close"]);
@@ -24,20 +26,22 @@ const name = computed({
   set: (value) => props.node.setName(value),
 });
 
-const ifaceList = computed(() => props.node.getConnectorList());
-const ifaceName = ref(ifaceList.value[0]);
+const ifaceList = computed(() => props.node.getIfaceList());
+const iface = ref(ifaceList.value[0]);
 
-const ipConf = computed({
-  get: () => props.node.getIpConfig(ifaceName.value),
-  set: (value) => props.node.setIpConfig(value, ifaceName.value),
-});
 
-const dhcpConf = computed({
-  get: () => props.node.useService(SID.DHCPServer).conf,
-  set: (value) => props.node.useService(SID.DHCPServer).setConf(value),
-})
 
-const hasDHCPServer = computed(() => props.node.services.has(SID.DHCPServer))
+let dhcpConf = null;
+let hasDHCPServer = null;
+
+if (props.node.isType(NodeType.Host)) {
+  dhcpConf = computed({
+    get: () => props.node.useService(SID.DHCPServer)?.conf,
+    set: (value) => props.node.useService(SID.DHCPServer).setConf(value),
+  })
+  
+  hasDHCPServer = computed(() => props.node.services.has(SID.DHCPServer))
+}
 
 
 const close = () => {
@@ -66,20 +70,14 @@ const close = () => {
 
     <div class="flex justify-between border-t pt-2">
       <h3 class="font-bold">IP-Config:</h3>
-      <select v-model="ifaceName" class="text-sm rounded">
-        <option v-for="ifaceName in ifaceList" :key="ifaceName">
-          {{ ifaceName }}
+      <select v-model="iface" class="text-sm rounded">
+        <option v-for="iface in ifaceList" :key="iface.name" :value="iface">
+          {{ iface.name }}
         </option>
       </select>
     </div>
 
-    <div class="flex flex-col gap-1">
-      <ip-addr-input-field v-model="ipConf.addr" label="IP-Adresse" />
-      <ip-addr-input-field v-model="ipConf.snm" isMask label="Subnetzmaske" />
-      <ip-addr-input-field v-model="ipConf.gw" label="Gateway" />
-      <ip-addr-input-field v-model="ipConf.dns" label="DNS" />
-      <p class="text-right">Static: {{ ipConf.static ? '✔️' : '❌' }}</p>
-    </div>
+    <network-interface-edit :iface="iface"/>
 
     <div class=" border-t pt-2" v-if="hasDHCPServer">
       <h3 class="font-bold">DHCP-Server:</h3>

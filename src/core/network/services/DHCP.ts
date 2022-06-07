@@ -1,5 +1,5 @@
 import { IPv4Config } from "../components/Adressable";
-import { Host } from "../components/Host";
+import { Host } from "../components/NetworkComponents";
 import { Storeable } from "../NetworkManager";
 import { Frame, FrameType, MacAddr } from "../protocols/Ethernet";
 import { IPv4Addr, Packet, Subnetmask } from "../protocols/IPv4";
@@ -48,11 +48,11 @@ class Payload {
 }
 
 export class Client implements Service {
-  owner: Host
+  node: Host
   state: ServiceState
 
-  constructor(owner: Host) {
-    this.owner = owner
+  constructor(node: Host) {
+    this.node = node
     this.state = ServiceState.idle
   }
 
@@ -65,14 +65,14 @@ export class Client implements Service {
   }
 
   sendDHCPDiscover() {
-    TM.log(`DHCP: ${this.owner.name} send ${DHCP_DISCOVER.toString()}`)
+    TM.log(`DHCP: ${this.node.name} send ${DHCP_DISCOVER.toString()}`)
     // Send Broadcast to discover DHCP Server.
     const SOURCE_IP = "0.0.0.0"
     const TARGET_IP = "255.255.255.255"  // Broadcast
     const payload = new Payload(DHCPType.DISCOVER)
-    payload.macAddr = this.owner.getMacAddr()
+    payload.macAddr = this.node.getDefaultIface().getMacAddr()
     const packet = new Packet(SOURCE_IP, TARGET_IP, SID.DHCPServer, payload.toString())
-    this.owner.sendPacket(packet)
+    this.node.ipHandler.sendPacket(packet)
     this.state = ServiceState.pending
   }
 
@@ -90,18 +90,19 @@ export class Client implements Service {
     // handle offer
     if ( payload.type = DHCPType.OFFER) {
       // check mac Addr
-      if (this.owner.getMacAddr() !== payload.macAddr) return
-      TM.log(`DHCP: ${this.owner.name} receive ${DHCP_OFFER.toString()}`)
-      this.owner.setIpConfig(payload.ipConfig)
+      const iface = this.node.getIfaceByMacAddr(payload.macAddr)
+      if (iface === undefined) return
+      TM.log(`DHCP: ${this.node.name} receive ${DHCP_OFFER.toString()}`)
+      iface.setConfig(payload.ipConfig)
       this.state = ServiceState.idle
     } else {
-      TM.log(`DHCP: ${this.owner.name} receive ${payload.type}`)
+      TM.log(`DHCP: ${this.node.name} receive ${payload.type}`)
     }
   };
 }
 
 export class Server implements Service, Storeable {
-  owner: Host
+  node: Host
   state: ServiceState
   conf: {
     first: IPv4Addr,
@@ -112,8 +113,8 @@ export class Server implements Service, Storeable {
   }
   inUse: Array<IPv4Addr>
 
-  constructor(owner: Host) {
-    this.owner = owner
+  constructor(node: Host) {
+    this.node = node
     this.state = ServiceState.idle
     this.conf = {
       first: "",
@@ -138,16 +139,17 @@ export class Server implements Service, Storeable {
   }
 
   sendDHCPOffer(discover: Payload) {
-    TM.log(`DHCP: ${this.owner.name} send ${DHCP_OFFER.toString()}`)
+    TM.log(`DHCP: ${this.node.getName()} send ${DHCP_OFFER.toString()}`)
     // Send Broadcast to discover DHCP Server.
-    const SOURCE_IP = this.owner.getIpAddr()
+    const SOURCE_IP = this.node.getDefaultIface().getIpAddr()
     const TARGET_IP = "255.255.255.255"  // Broadcast
     const payload = new Payload(DHCPType.OFFER)
     payload.macAddr = discover.macAddr
     payload.ipConfig = this.getFreeIpConf()
     const packet = new Packet(SOURCE_IP, TARGET_IP, SID.DHCPClient, payload.toString())
-    const frame = new Frame(this.owner.getMacAddr(),discover.macAddr, FrameType.IPv4,packet)
-    this.owner.sendFrame(frame)
+
+    const frame = new Frame(this.node.getDefaultIface().getMacAddr(),discover.macAddr, FrameType.IPv4,packet)
+    this.node.maController.transmitFrame(frame)
   }
 
   sendRequest(args?: any) {
@@ -158,10 +160,10 @@ export class Server implements Service, Storeable {
     const payload = Payload.fromString(packet.payload)
     // handle discover
     if ( payload.type === DHCPType.DISCOVER) {
-      TM.log(`DHCP: ${this.owner.name} receive ${DHCP_DISCOVER.toString()}`)
+      TM.log(`DHCP: ${this.node.getName()} receive ${DHCP_DISCOVER.toString()}`)
       this.sendDHCPOffer(payload)
     } else {
-      TM.log(`DHCP: ${this.owner.name} receive ${payload.type}`)
+      TM.log(`DHCP: ${this.node.getName()} receive ${payload.type}`)
     }
   };
 

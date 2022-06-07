@@ -1,6 +1,13 @@
 import { defineStore } from "pinia";
 import { NetworkManager } from "@/core/network/NetworkManager";
-import { NodeType } from "@/core/network/components/Node";
+import { NodeType } from "@/core/network/components/NetworkComponents";
+import { NodeColor } from "../core/network/components/Drawable";
+
+const colorMap = new Map();
+colorMap.set(NodeType.Host, NodeColor.Host);
+colorMap.set(NodeType.Switch, NodeColor.Switch);
+colorMap.set(NodeType.Router, NodeColor.Router);
+colorMap.set(NodeType.Cloud, NodeColor.Cloud);
 
 export const useNetworkStore = defineStore({
   id: "network",
@@ -41,12 +48,13 @@ export const useNetworkStore = defineStore({
         nodes[node.id] = {
           id: node.id,
           name: node.getName(),
+          type: node.getNodeType(),
           color:
             node.id == state.nodeInfo.nodeID && state.nodeInfo.show
               ? "#FFBF00"
-              : node.drawable.color,
-          dType: node.drawable.shape,
-          size: node.drawable.size,
+              : colorMap.get(node.getNodeType()), // node.drawable.color,
+          dType: node.isType(NodeType.Host) ? "circle" : "rect", // node.drawable.shape,
+          size: node.isType(NodeType.Cloud) ? 50 : 26, //.size,
           icon: "&#xe320",
         };
       });
@@ -56,24 +64,14 @@ export const useNetworkStore = defineStore({
       let edges = {};
       state.manager.links.forEach((link) => {
         edges[link.id] = {
-          source: link.c1.owner.getNodeID(),
-          target: link.c2.owner.getNodeID(),
+          source: link.p1.node.getNodeID(),
+          target: link.p2.node.getNodeID(),
           animate: link.active,
-          srcmarker: link.c1.id === "WAN" ? "circle" : "none",
-          tarmarker:
-            link.c2.id === "WAN" ? "circle" : link.active ? "arrow" : "none",
+          //srcmarker: link.p1 === "WAN" ? "circle" : "none",
+          //tarmarker: link.p2 === "WAN" ? "circle" : link.active ? "arrow" : "none",
         };
       });
       return edges;
-    },
-    getLayouts: (state) => {
-      let layouts = {
-        nodes: {},
-      };
-      state.manager.nodes.forEach((node) => {
-        layouts.nodes[node.id] = node.drawable.pos;
-      });
-      return layouts;
     },
     getActiveLinks: (state) => {
       return state.manager.links.filter((link) => link.active);
@@ -108,8 +106,7 @@ export const useNetworkStore = defineStore({
   },
   actions: {
     moveNode(nodeID, newPos) {
-      const node = this.manager.getNodeByID(nodeID);
-      node.drawable.pos = newPos;
+      this.layouts.nodes[nodeID] = newPos;
     },
     setTermCtxID(id) {
       if (typeof id === "string") {
@@ -126,7 +123,7 @@ export const useNetworkStore = defineStore({
       this.$reset;
     },
     updateLayoutForNode(node) {
-      this.layouts.nodes[node.id] = node.drawable.pos;
+      //this.layouts.nodes[node.id] = node.drawable.pos;
     },
     updateLayouts() {
       this.manager.nodes.forEach((node) => {
@@ -134,24 +131,22 @@ export const useNetworkStore = defineStore({
       });
     },
     saveNetwork() {
-      localStorage.setItem(
-        "netsim-network-manager",
-        this.manager.saveNetwork()
-      );
+      const data = this.manager.saveNetwork();
+      data["layouts"] = this.layouts;
+      localStorage.setItem("netsim-network-manager", JSON.stringify(data));
     },
     loadRecentNetwork() {
       if (localStorage["netsim-network-manager"]) {
-        this.manager.loadNetwork(
-          JSON.parse(localStorage.getItem("netsim-network-manager"))
-        );
-        this.updateLayouts();
+        const data = JSON.parse(localStorage.getItem("netsim-network-manager"));
+        this.layouts.nodes = data.layouts?.nodes ?? {};
+        this.manager.loadNetwork(data);
       } else {
         console.warn("No network found");
       }
     },
     saveNetworkAsFile() {
       const filename = "network-sim_example.json"; // filename to download
-      const text = this.manager.saveNetwork();
+      const text = this.saveNetwork();
 
       const url = URL.createObjectURL(
         new Blob([text], { type: "octet/stream" })

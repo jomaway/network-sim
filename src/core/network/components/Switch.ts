@@ -3,19 +3,28 @@ import { Link, LinkID } from "./Link"
 import { Node, NodeID, NodeType } from "./Node"
 import { NodeIcon } from "./Drawable"
 import { Connector } from "./Connector"
+import { Port } from "./Port"
+import { SwitchPortController } from "../protocols/networkStack"
 
 export class Switch extends Node {
   name: string
   portCount: number;
   macTable: Map<LinkID,Array<MacAddr>>;
+  
+  ports: Array<Port>;
+  spc: SwitchPortController;
 
   constructor(id: NodeID, ports: number) {
     super(id)
     this.name = `Switch-${ports}`
     this.portCount = ports;
     this.macTable = new Map()
+
+    this.ports = []
+    this.spc = new SwitchPortController(this)
     for (let i = 0; i < ports; i++) {
       this.addConnector()
+      this.ports.push(new Port(this.spc))
     }
 
     // add Drawable

@@ -1,7 +1,8 @@
 import { mdiSleep } from "@mdi/js"
 import { Connector, NIC } from "../components/Connector"
 import { Host } from "../components/Host"
-import { Node } from "../components/Node"
+import { AdressableNode, Node } from "../components/NetworkComponents"
+import { NetworkInterface } from "../components/NetworkInterface"
 import { sleep } from "../Helper"
 import TM, { TrafficEvent } from "../TrafficManager"
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet"
@@ -32,14 +33,14 @@ export class Packet {
 
 
 export class ArpHandler {
-  owner: Node
+  node: AdressableNode
   arpCache: Map<IPv4Addr,MacAddr>
   arpCounter: number;
   onResolve: Function;
   pending: boolean
 
-  constructor(owner: Node) {
-    this.owner = owner
+  constructor(node: AdressableNode) {
+    this.node = node
     this.arpCache = new Map()
     this.arpCounter = 0;
     this.onResolve = null
@@ -59,7 +60,7 @@ export class ArpHandler {
     return this.arpCache.has(ip)
   }
 
-  async resolve(ip: IPv4Addr, iface: NIC) : Promise<string> {
+  async resolve(ip: IPv4Addr, iface: NetworkInterface) : Promise<string> {
     // check if there is an entry in the arp table
     if (this.knows(ip)) {
       return this.arpCache.get(ip)
@@ -69,8 +70,8 @@ export class ArpHandler {
         await this.waitforResult()
         TM.debug("ARP.resolve() continue")
       }
-      const o = this.owner as Host  // todo pass interface to fn
-      this.sendArpRequest(iface.getMacAddr(), o.getIpAddr(iface.id), ip, iface)
+
+      this.sendArpRequest(iface.getMacAddr(), iface.getIpAddr(), ip)
       
       const timerID = TM.setTimer(() => this.pending = false, 10 )
       await this.waitforResult()
@@ -86,35 +87,36 @@ export class ArpHandler {
     } 
   }
 
-  sendArpRequest(srcMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr, connector: Connector) {
-    TM.log(`ARP:  Node ${this.owner.getNodeID()} (${this.owner.getName()}) send Request`)
+  sendArpRequest(srcMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr) {
+    TM.log(`ARP:  Node ${this.node.getNodeID()} (${this.node.getName()}) send Request`)
     const packet = new Packet(ArpType.Request,srcIp,dstIp, srcMac, ZERO_MAC)
+    
     const frame = new Frame(srcMac,MAC_BROADCAST_ADDR, FrameType.ARP, packet)
-    this.owner.transmit(connector,frame)
+    this.node.maController.transmitFrame(frame)
     this.pending = true // shows that an Request was send.
   }
 
-  sendArpResponse(srcMac: MacAddr, dstMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr, connector: Connector) {
-    TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) send Response`)
+  sendArpResponse(srcMac: MacAddr, dstMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr) {
+    TM.log(`ARP: Node ${this.node.getNodeID()} (${this.node.getName()}) send Response`)
     const packet = new Packet(ArpType.Response,srcIp, dstIp, srcMac, dstMac)
     const frame = new Frame(srcMac,dstMac, FrameType.ARP, packet)
-    this.owner.transmit(connector,frame)
+    this.node.maController.transmitFrame(frame)
   }
 
-  handleArpRequest(packet: Packet, ownMac: MacAddr, ownIp: IPv4Addr, connector: Connector) {
+  handleArpRequest(packet: Packet, ownMac: MacAddr, ownIp: IPv4Addr) {
     // save senders ARP information
     this.arpCache.set(packet.senderIP, packet.senderMAC)
     // check if packet is for themselve.
     if ( packet.targetIP === ownIp) {
-      TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) received Request`)
-      this.sendArpResponse(ownMac, packet.senderMAC, ownIp, packet.senderIP, connector)
+      TM.log(`ARP: Node ${this.node.getNodeID()} (${this.node.getName()}) received Request`)
+      this.sendArpResponse(ownMac, packet.senderMAC, ownIp, packet.senderIP)
     } else {
-      TM.debug(`Drop: Node ${this.owner.getNodeID()} (${this.owner.getName()}) dropped ${JSON.stringify(packet)}`)
+      TM.debug(`Drop: Node ${this.node.getNodeID()} (${this.node.getName()}) dropped ${JSON.stringify(packet)}`)
     }
   }
 
   handleArpResponse(packet: Packet) {
-    TM.log(`ARP: Node ${this.owner.getNodeID()} (${this.owner.getName()}) received Response`)
+    TM.log(`ARP: Node ${this.node.getNodeID()} (${this.node.getName()}) received Response`)
     const mac = packet.senderMAC
     const ip = packet.senderIP
     this.arpCache.set(ip,mac)
@@ -123,10 +125,15 @@ export class ArpHandler {
     this.onResolve?.(ip, mac)
   }
 
-  handleArpPacket(packet: Packet, iface: {connector: Connector, mac: MacAddr, ip: IPv4Addr}) {
+  handlePacket(packet: Packet) {
+    let iface = this.node.getIfaceByIpAddr(packet.targetIP) 
+    
+    // if no interface is ofund use default interface instead
+    if (iface === undefined) {iface = this.node.getDefaultIface()}
+
     if ( packet.type === ArpType.Request) {
       // arp request
-      this.handleArpRequest(packet, iface.mac, iface.ip, iface.connector )
+      this.handleArpRequest(packet, iface.getMacAddr(), iface.getIpAddr() )
     } else {
       // arp response
       this.handleArpResponse(packet)

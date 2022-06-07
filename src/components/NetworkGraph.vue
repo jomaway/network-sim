@@ -14,6 +14,7 @@ import AddLinkDialog from "@/components/dialogs/AddLinkDialog.vue";
 import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
 import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
 import SettingsDialog from "./dialogs/SettingsDialog.vue";
+import { SID } from "../core/network/services/Services";
 
 defineProps({
   eventHandlers: Object,
@@ -73,18 +74,17 @@ const getViewContextMenuItems = (pos) => {
       name: "Add Host",
       onSelect: () => {
         const h = networkStore.manager.addHost("New Host");
-        h.drawable.pos = pos;
-        networkStore.updateLayoutForNode(h);
+        networkStore.moveNode(h.getNodeID(), pos);
+        //networkStore.updateLayoutForNode(h);
       },
     },
     {
       name: "Add Server",
       onSelect: () => {
         const h = networkStore.manager.addHost("Server");
-        h.drawable.pos = pos;
-        h.drawable.color = NodeColor.Server;
-        h.registerService(new DHCPServer(h));
-        networkStore.updateLayoutForNode(h);
+        networkStore.moveNode(h.getNodeID(), pos);
+        //h.registerService(new DHCPServer(h));
+        //networkStore.updateLayoutForNode(h);
       },
     },
     {
@@ -94,24 +94,24 @@ const getViewContextMenuItems = (pos) => {
           name: "5 Ports",
           onSelect: () => {
             const s = networkStore.manager.addSwitch(5);
-            s.drawable.pos = pos;
-            networkStore.updateLayoutForNode(s);
+            networkStore.moveNode(s.getNodeID(), pos);
+            //networkStore.updateLayoutForNode(s);
           },
         },
         {
           name: "8 Ports",
           onSelect: () => {
             const s = networkStore.manager.addSwitch(8);
-            s.drawable.pos = pos;
-            networkStore.updateLayoutForNode(s);
+            networkStore.moveNode(s.getNodeID(), pos);
+            //networkStore.updateLayoutForNode(s);
           },
         },
         {
           name: "16 Ports",
           onSelect: () => {
             const s = networkStore.manager.addSwitch(16);
-            s.drawable.pos = pos;
-            networkStore.updateLayoutForNode(s);
+            networkStore.moveNode(s.getNodeID(), pos);
+            //networkStore.updateLayoutForNode(s);
           },
         },
       ],
@@ -120,8 +120,8 @@ const getViewContextMenuItems = (pos) => {
       name: "Add Router",
       onSelect: () => {
         const r = networkStore.manager.addRouter();
-        r.drawable.pos = pos;
-        networkStore.updateLayoutForNode(r);
+        networkStore.moveNode(r.getNodeID(), pos);
+        //networkStore.updateLayoutForNode(r);
       },
     },
   ];
@@ -130,9 +130,9 @@ const getViewContextMenuItems = (pos) => {
     items.push({
       name: "Add Cloud",
       onSelect: () => {
-        const i = networkStore.manager.addCloud();
-        i.drawable.pos = pos;
-        networkStore.updateLayoutForNode(i);
+        const c = networkStore.manager.addCloud();
+        networkStore.moveNode(c.getNodeID(), pos);
+        //networkStore.updateLayoutForNode(i);
       },
     })
   }
@@ -151,10 +151,10 @@ const getNodeContextMenuItems = (nodeID) => {
   ];
 
   if (
-    node.hasFreeConnector() &&
+    node.hasFreePort() &&
     networkStore.isNodeSelected &&
     node.getNodeID() !== networkStore.getSelectedNode.getNodeID() &&
-    networkStore.getSelectedNode.hasFreeConnector()
+    networkStore.getSelectedNode.hasFreePort()
   ) {
     items.push({
       name: "Connect to selected Node",
@@ -164,15 +164,17 @@ const getNodeContextMenuItems = (nodeID) => {
             AddLinkDialog,
             { from: node, to: networkStore.getSelectedNode }
           );
+          console.log("Returned", from, to);
           networkStore.manager.addLink(from, to);
         } catch (err) {
           toast.error(err.message);
         }
       },
     });
-  } else if (node.getNodeType() !== NodeType.Switch) {
-    node.connectors
-      .filter((c) => c.isConnected())
+  } /* else if (!node.isType(NodeType.Switch)) {
+    // todo! fix this later .... old style
+    node<AddressableNode>.getIfaceList()
+      .filter((c) => c.port.isConnected())
       .forEach((c) => {
         items.push({
           name: `Disconnect ${c.id}`,
@@ -182,7 +184,7 @@ const getNodeContextMenuItems = (nodeID) => {
           },
         });
       });
-  }
+  }*/
 
   switch (node?.getNodeType()) {
     case NodeType.Switch:
@@ -211,19 +213,18 @@ const getNodeContextMenuItems = (nodeID) => {
       items.push({
         name: "send DHCP discover",
         onSelect: () => {
-          const host = node;
-          host.getDynamicIpConfig();
+          node.useService(SID.DHCPClient).sendRequest();
         },
       });
       if (
         networkStore.isNodeSelected &&
-        networkStore.getSelectedNode.isHost()
+        networkStore.getSelectedNode.isType(NodeType.Host)
       ) {
         items.push({
           name: "ping selected Node",
           onSelect: () => {
             const host = node;
-            host.ping(networkStore.getSelectedNode.getIpAddr());
+            host.ping(networkStore.getSelectedNode.getDefaultIface().getIpAddr());
           },
         });
       }
@@ -235,12 +236,12 @@ const getNodeContextMenuItems = (nodeID) => {
           networkStore.setEditNode(node.getNodeID());
         },
       });
-      if (!node.getConnectorByID("WAN").isConnected()) {
+      if (!node.getIfaceByName("WAN").port.isConnected()) {
         items.push({
           name: "Connect to Cloud",
           onSelect: () => {
             try {
-              networkStore.manager.addLink(node.getConnectorByID("WAN"), networkStore.manager.getCloud());
+              networkStore.manager.addLink(node.getIfaceByName("WAN").port, networkStore.manager.getCloud().getNextFreePort());
               const ipconf = networkStore.manager.getCloud().getDynamicIP();
               node.setIpConfig(ipconf, "WAN");
             } catch (err) {
@@ -293,9 +294,9 @@ const eventHandlers = {
     //props.eventHandlers["node:click"](data);
   },
   "node:dragend": (nodes) => {
-    for (const nodeID in nodes) {
-      networkStore.moveNode(nodeID, nodes[nodeID]);
-    }
+    //for (const nodeID in nodes) {
+      //networkStore.moveNode(nodeID, nodes[nodeID]);
+    //}
   },
   "node:contextmenu": showNodeContextMenu,
   "edge:contextmenu": showEdgeContextMenu,
@@ -434,10 +435,10 @@ const layers = {
 };
 
 const calcLinkCenterPos = (link) => {
-  const source = link.c1.owner; //as Node
-  const target = link.c2.owner; //as Node
-  const start = source.drawable.pos;
-  const end = target.drawable.pos;
+  const source = link.p1.node.getNodeID(); //as Node
+  const target = link.p2.node.getNodeID(); //as Node
+  const start = networkStore.layouts.nodes[source]; // source.drawable.pos;
+  const end = networkStore.layouts.nodes[target]; //target.drawable.pos;
   return {
     x: start.x + (end.x - start.x) * 0.5,
     y: start.y + (end.y - start.y) * 0.5,
@@ -498,10 +499,10 @@ const calcLinkCenterPos = (link) => {
     </template>
     <template #batches="{ scale }" v-if="networkStore.settings.showIpBatches">
       <svg
-        v-for="host in networkStore.manager.getAllHosts()"
+        v-for="host in networkStore.manager.layouts"
         :key="host.id"
-        :x="host.drawable.pos.x - 20 * scale"
-        :y="host.drawable.pos.y - 40 * scale"
+        :x="host.pos.x - 20 * scale"
+        :y="host.pos.y - 40 * scale"
       >
         <rect width="100" height="24" rx="15" ry="15" fill="#aed6f1" />
         <text
@@ -515,6 +516,7 @@ const calcLinkCenterPos = (link) => {
           {{ host.getCIDR() }}
         </text>
       </svg>
+      <!-- 
       <svg
         v-for="host in networkStore.manager.getAllRouters()"
         :key="host.id"
@@ -551,7 +553,8 @@ const calcLinkCenterPos = (link) => {
         >
           W: {{ host.getCIDR("WAN") }}
         </text>
-      </svg>
+      </svg> 
+      -->
     </template>
   </v-network-graph>
   <context-menu
