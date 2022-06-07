@@ -1,0 +1,1 @@
+import{o as a,c as t,w as e,M as o,a as s}from"./index.16c5fdb2.js";const c=s("p",null,"Tutorial",-1),_={name:"Tutorial",setup(r){return(n,l)=>(a(),t(o,null,{default:e(()=>[c]),_:1}))}};export{_ as default};
