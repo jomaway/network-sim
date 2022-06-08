@@ -1,74 +1,26 @@
-import { Port } from "../components/Port";
-import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet";
-import { Packet as ArpPacket, ArpHandler } from "../protocols/ARP";
-import { IPv4Addr, isValidIp, Packet as IpPacket } from "../protocols/IPv4";
-import { NetworkInterface } from "../components/NetworkInterface";
-import { NodeType } from "../components/NetworkComponents";
 import { AdressableNode } from "../components/AddressableNode";
+import { NetworkInterface } from "../components/NetworkInterface";
 import { Switch } from "../components/Switch";
-import { Host } from "../components/Host";
-import TM from "../TrafficManager";
+import { Port } from "../components/Port";
 
-export class IpHandler {
-  node: AdressableNode
+import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "../protocols/Ethernet";
+import { ArpPacket as ArpPacket, ArpHandler } from "../protocols/ARP";
+import { IpPacket } from "../protocols/IPv4";
+import { TcpSegment } from "./TCP";
+import { UdpSegment } from "./UDP";
 
-  constructor(node: AdressableNode) {
-    this.node = node;
-  }
+export interface ApplicationLayer {
+  receiveData: (data:any) => void;
+} 
 
-  handlePacket(packet: IpPacket) {
-    if (this.node.isType(NodeType.Host)) {
-      const host = this.node as Host
-      // forward to service 
-      if (host.hasService(packet.sID)) {
-        host.useService(packet.sID)?.handleIpPacket(packet)
-      } else {
-        TM.log(`Unknown SID: ${packet.sID}`)
-      }
-    }
-  }
+export interface TransportLayer {
+  receiveSegment: (segment: TcpSegment | UdpSegment) => void;
+  sendSegment: (segment: TcpSegment | UdpSegment) => void;
+}
 
-  async sendPacket(packet: IpPacket) {
-    let dstIp = packet.dst
-    // check if the destination is a valid ip address
-    if (!isValidIp(dstIp)) {
-      throw new Error(`can't send packet. ${dstIp} is no valid ip.`)
-    }
-    // get iface associatet with  the source ip address
-    let iface = this.node.getIfaceByIpAddr(packet.src)
-
-    if (iface === undefined) {iface = this.node.getDefaultIface()}
-
-    // check if ip is in the same network
-    if (!this.isSameNetwork(dstIp, iface) && !this.isIpBroadcast(dstIp)) {
-      TM.log("Destination not in the same network")
-      // change dst ip to Gateway
-      dstIp = iface.getGateway()
-    } 
-    const dstMac = await this.node.arpHandler.resolve(dstIp, iface)
-    if (!dstMac) {
-      TM.log(`Could not resolve the mac for ip ${dstIp} Packet will be droped`);
-      return // drop packet
-    }
-    const frame = new Frame(iface.getMacAddr(),dstMac,FrameType.IPv4,packet)
-    this.node.maController.transmitFrame(frame)
-  }
-
-  isIpBroadcast(addr){
-    return addr === "255.255.255.255"
-  }
-
-  isSameNetwork(addr: IPv4Addr, iface: NetworkInterface) : boolean {
-    const snm = iface.getSubnetmask().split('.').map((octet) => parseInt(octet))
-
-    const ownNetwork = iface.getIpAddr().split('.').map((octet, idx) => parseInt(octet) & snm[idx]).join('.')
-    const otherNetwork = addr.split('.').map((octet, idx) => parseInt(octet) & snm[idx]).join('.')
-
-    //console.log(ownNetwork, otherNetwork, ownNetwork === otherNetwork);
-    
-    return (ownNetwork === otherNetwork)
-  }
-
+export interface NetworkLayer {
+  receivePacket: (packet: IpPacket) => void;
+  sendPacket: (packet: IpPacket) => void;
 }
 
 export interface MediaAccessControll {
@@ -127,27 +79,23 @@ export class SwitchPortController implements MediaAccessControll {
 
 export class MediaAccessController implements MediaAccessControll {
   node: AdressableNode;
-  arpHandler: ArpHandler;
-  ipHandler: IpHandler;
 
   constructor(node: AdressableNode) {
     this.node = node;
-    this.arpHandler = node.arpHandler // todo! maybe use getter method
-    this.ipHandler = node.ipHandler // todo! maybe use getter method
   };
 
   receiveFrame (port: Port, frame: Frame) : void {
     //  only process frame if it has a valid destination mac-address
     const macAddressList = this.node.getIfaceList().map((ni: NetworkInterface) => ni.getMacAddr());
-    console.log("#Debug: macAddressList", macAddressList);
+    console.log("#Debug: MediaAccessController - Node ", this.node.getNodeID(),  "macAddressList: ", macAddressList);
     
     if( macAddressList.includes(frame.dst) || MAC_BROADCAST_ADDR === frame.dst) {
       //this.owner.receive(this, frame)
       if (frame.type === FrameType.ARP) {
         // let arp handle the packet.
-        if (frame.payload instanceof ArpPacket) this.arpHandler.handlePacket(frame.payload)
+        if (frame.payload instanceof ArpPacket) this.node.arpHandler.receivePacket(frame.payload)
       } else { // FrameType.IP
-        if (frame.payload instanceof IpPacket ) this.ipHandler.handlePacket(frame.payload)
+        if (frame.payload instanceof IpPacket ) this.node.getNetworkLayer().receivePacket(frame.payload)
       }
       // else frame will be droped!  
     }

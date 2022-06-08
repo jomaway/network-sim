@@ -4,6 +4,7 @@ import { sleep } from "../Helper"
 import TM from "../TrafficManager"
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet"
 import { IPv4Addr } from "./IPv4"
+import { NetworkLayer } from "./networkStack";
 
 const ZERO_MAC = "00-00-00-00-00-00"
 
@@ -12,7 +13,7 @@ enum ArpType {
   Response = "ARP-Response"
 }
 
-export class Packet {
+export class ArpPacket {
   type: ArpType
   senderIP: IPv4Addr
   targetIP: IPv4Addr
@@ -86,7 +87,7 @@ export class ArpHandler {
 
   sendArpRequest(srcMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr) {
     TM.log(`ARP:  Node ${this.node.getNodeID()} (${this.node.getName()}) send Request`)
-    const packet = new Packet(ArpType.Request,srcIp,dstIp, srcMac, ZERO_MAC)
+    const packet = new ArpPacket(ArpType.Request,srcIp,dstIp, srcMac, ZERO_MAC)
     
     const frame = new Frame(srcMac,MAC_BROADCAST_ADDR, FrameType.ARP, packet)
     this.node.maController.transmitFrame(frame)
@@ -95,12 +96,12 @@ export class ArpHandler {
 
   sendArpResponse(srcMac: MacAddr, dstMac: MacAddr, srcIp: IPv4Addr, dstIp: IPv4Addr) {
     TM.log(`ARP: Node ${this.node.getNodeID()} (${this.node.getName()}) send Response`)
-    const packet = new Packet(ArpType.Response,srcIp, dstIp, srcMac, dstMac)
+    const packet = new ArpPacket(ArpType.Response,srcIp, dstIp, srcMac, dstMac)
     const frame = new Frame(srcMac,dstMac, FrameType.ARP, packet)
     this.node.maController.transmitFrame(frame)
   }
 
-  handleArpRequest(packet: Packet, ownMac: MacAddr, ownIp: IPv4Addr) {
+  handleArpRequest(packet: ArpPacket, ownMac: MacAddr, ownIp: IPv4Addr) {
     // save senders ARP information
     this.arpCache.set(packet.senderIP, packet.senderMAC)
     // check if packet is for themselve.
@@ -112,7 +113,7 @@ export class ArpHandler {
     }
   }
 
-  handleArpResponse(packet: Packet) {
+  handleArpResponse(packet: ArpPacket) {
     TM.log(`ARP: Node ${this.node.getNodeID()} (${this.node.getName()}) received Response`)
     const mac = packet.senderMAC
     const ip = packet.senderIP
@@ -122,7 +123,7 @@ export class ArpHandler {
     this.onResolve?.(ip, mac)
   }
 
-  handlePacket(packet: Packet) {
+  receivePacket(packet: ArpPacket) {
     let iface = this.node.getIfaceByIpAddr(packet.targetIP) 
     
     // if no interface is ofund use default interface instead

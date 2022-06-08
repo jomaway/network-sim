@@ -1,11 +1,11 @@
 <script setup>
 import { computed, ref, watch } from "vue";
-import { Node } from "@/core/network/components/NetworkComponents";
-import IconClose from "./icons/IconClose.vue";
-import IpAddrInputField from "./IpAddrInputField.vue";
-import { SID } from "../core/network/services/Services";
 import { NodeType } from "../core/network/components/NetworkComponents";
+import { Node } from "@/core/network/components/Node";
+
+import IconClose from "./icons/IconClose.vue";
 import NetworkInterfaceEdit from "./edits/NetworkInterfaceEdit.vue";
+import IpAddrInputField from "./IpAddrInputField.vue";
 
 const props = defineProps({
   node: {
@@ -29,18 +29,16 @@ const name = computed({
 const ifaceList = computed(() => props.node.getIfaceList());
 const iface = ref(ifaceList.value[0]);
 
-
-
 let dhcpConf = null;
 let hasDHCPServer = null;
 
 if (props.node.isType(NodeType.Host)) {
   dhcpConf = computed({
-    get: () => props.node.useService(SID.DHCPServer)?.conf,
-    set: (value) => props.node.useService(SID.DHCPServer).setConf(value),
-  })
+    get: () => props.node.dhcpServer.conf,
+    set: (value) => props.node.dhcpServer.setConf(value),
+  });
   
-  hasDHCPServer = computed(() => props.node.services.has(SID.DHCPServer))
+  hasDHCPServer = computed(() => props.node.dhcpServer.isRunning());
 }
 
 

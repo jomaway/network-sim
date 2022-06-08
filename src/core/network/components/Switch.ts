@@ -7,13 +7,13 @@ import { Node } from "./Node";
 
 export class Switch extends Node {
   ports: Array<Port>;
-  spc: SwitchPortController;
+  maController: SwitchPortController;
 
   constructor(id: NodeID, ports: number) {
     super(id);
     this.name = `Switch-${ports}`;
     this.ports = []
-    this.spc = new SwitchPortController(this)
+    this.maController = new SwitchPortController(this)
     for (let i = 0; i < ports; i++) {
       // hook up each port with the SwitchPortController
       this.ports.push(new Port(this))
@@ -37,7 +37,7 @@ export class Switch extends Node {
   }
 
   getMediaAccessControll(): MediaAccessControll {
-    return this.spc;
+    return this.maController;
   }
 
   hasFreePort(): boolean {

@@ -1,19 +1,26 @@
-import { Packet } from "../protocols/IPv4";
+import { ApplicationLayer } from "../protocols/networkStack";
 
-export enum SID {
-  MSG,
-  ICMP,
-  DHCPClient,
-  DHCPServer,
-  DNSServer,
-  DNSClient,
-}
+export abstract class Service implements ApplicationLayer {
+  running: boolean;
 
-export interface Service {
-  getServiceID: () => SID;
-  //getState: () => ServiceState;
-  sendRequest: (args?: any) => void;
-  handleIpPacket: (packet: Packet) => void;
+  constructor() {
+    this.running = false
+  }
+
+  abstract receiveData(data:any): void;
+  
+  start() {
+    this.running = true;
+  }
+
+  stop() {
+    this.running = false;
+  }
+
+  isRunning() : boolean {
+    return this.running;
+  }
+
 }
 
 export enum ServiceState {

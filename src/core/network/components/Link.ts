@@ -1,5 +1,5 @@
 import { Frame } from '../protocols/Ethernet'
-import TM, { TrafficEvent, TrafficManager } from '../TrafficManager';
+import TM, { TrafficEvent } from '../TrafficManager';
 import { Port } from './Port';
 
 export type LinkID = string;
@@ -8,7 +8,6 @@ export class Link {
   id: string
   p1: Port
   p2: Port
-  tm: TrafficManager
   active: boolean
   lastFrame: Frame
 
@@ -20,8 +19,6 @@ export class Link {
     this.active = false
     this.lastFrame = null
   }
-
-
 
   connect() {
     // Connect Link to Connectors

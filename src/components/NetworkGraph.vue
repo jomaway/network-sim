@@ -6,7 +6,6 @@ import * as vNG from "v-network-graph";
 
 import { LinkColor } from "@/core/network/components/Drawable";
 import { NodeType } from "@/core/network/components/NetworkComponents";
-import { SID } from "../core/network/services/Services";
 
 import FloatMenu from "@/components/FloatMenu.vue";
 import ContextMenu from "@/components/ContextMenu.vue";
@@ -82,8 +81,7 @@ const getViewContextMenuItems = (pos) => {
       onSelect: () => {
         const h = networkStore.manager.addHost("Server");
         networkStore.moveNode(h.getNodeID(), pos);
-        //h.registerService(new DHCPServer(h));
-        //networkStore.updateLayoutForNode(h);
+        h.dhcpServer.start(); // init host with running dhcp server.
       },
     },
     {
@@ -212,7 +210,7 @@ const getNodeContextMenuItems = (nodeID) => {
       items.push({
         name: "send DHCP discover",
         onSelect: () => {
-          node.useService(SID.DHCPClient).sendRequest();
+          node.dhcpClient.sendDHCPDiscover();
         },
       });
       if (
@@ -223,7 +221,9 @@ const getNodeContextMenuItems = (nodeID) => {
           name: "ping selected Node",
           onSelect: () => {
             const host = node;
-            host.ping(networkStore.getSelectedNode.getDefaultIface().getIpAddr());
+            host
+              .command()
+              .ping(networkStore.getSelectedNode.getDefaultIface().getIpAddr());
           },
         });
       }
@@ -290,13 +290,8 @@ const eventHandlers = {
   "node:click": (data) => {
     contextMenuData.show = false;
     console.log("Node", data.node, "clicked");
-    //props.eventHandlers["node:click"](data);
   },
-  "node:dragend": (nodes) => {
-    //for (const nodeID in nodes) {
-      //networkStore.moveNode(nodeID, nodes[nodeID]);
-    //}
-  },
+  //"node:dragend": (nodes) => {},
   "node:contextmenu": showNodeContextMenu,
   "edge:contextmenu": showEdgeContextMenu,
   "view:contextmenu": showViewContextMenu,
@@ -459,7 +454,16 @@ const calcLinkCenterPos = (link) => {
   >
     <!-- Replace the node component -->
     <template #override-node="{ nodeId, config, ...slotProps }">
-      <svg viewBox="0 0 512 512" x="-80" y="-60" width="160" height="120" :fill="config.color" v-if="nodeId === '-100'" v-bind="slotProps">
+      <svg
+        viewBox="0 0 512 512"
+        x="-80"
+        y="-60"
+        width="160"
+        height="120"
+        :fill="config.color"
+        v-if="nodeId === '-100'"
+        v-bind="slotProps"
+      >
         <g>
           <path d="M489.579,254.766c-12.942-16.932-30.829-29.887-50.839-36.933c-0.828-48.454-40.501-87.618-89.148-87.618
             c-7.618,0-15.213,0.993-22.647,2.958c-12.102-15.076-27.37-27.615-44.441-36.457c-19.642-10.173-40.881-15.331-63.127-15.331

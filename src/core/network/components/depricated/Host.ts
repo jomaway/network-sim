@@ -7,7 +7,7 @@ import { Connector, ConnectorID, NIC } from "./Connector";
 import { getUniqueMacAddr, isStoreable } from "../../NetworkManager";
 import { TrafficEvent } from "../../TrafficManager";
 import { Service, SID } from "../../services/Services";
-import { ICMPHandler } from "../../services/ICMP";
+import { ICMPHandler } from "../../protocols/ICMP";
 import { Client as DHCPClient, Server as DHCPServer } from "../../services/DHCP";
 import { Adressable, IPv4Config, isValidIp } from "./Adressable";
 import { Octet } from "ip-num";

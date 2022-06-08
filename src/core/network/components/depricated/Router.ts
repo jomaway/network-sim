@@ -5,7 +5,7 @@ import { Connectable, Connector, ConnectorID, NIC } from "./Connector";
 import { Host } from "./Host";
 import {getUniqueMacAddr} from "../../NetworkManager";
 import { Service, SID } from "../../services/Services";
-import { ICMPHandler } from "../../services/ICMP";
+import { ICMPHandler } from "../../protocols/ICMP";
 import { ArpHandler, Packet as ArpPacket } from "../../protocols/ARP";
 import { Packet as IpPacket } from "../../protocols/IPv4";
 import { IPv4Config } from "./Adressable";

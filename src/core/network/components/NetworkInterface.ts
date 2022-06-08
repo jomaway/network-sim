@@ -78,12 +78,12 @@ export class NetworkInterface {
   }
 
   setGateway (gw: IPv4Addr) : void {
-    if (!isValidIp(gw)) throw new Error("NIC.setGateway() - no valid ip address")
+    if (!isValidIp(gw) && gw !== "") throw new Error("NIC.setGateway() - no valid ip address")
     this.gw = gw;
   }
 
   setDns (dns: IPv4Addr) : void {
-    if (!isValidIp(dns)) throw new Error("NIC.setDns() - no valid ip address")
+    if (!isValidIp(dns) && dns !== "") throw new Error("NIC.setDns() - no valid ip address")
     this.dns = dns;
   }
 

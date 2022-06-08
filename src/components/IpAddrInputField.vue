@@ -34,7 +34,7 @@ const onEnter = () => {
   <label class="inline-flex items-center justify-end gap-2">
     <span class="text-right">{{ label }}:</span>
     <input
-      v-model.trim="computedValue"
+      v-model.lazy.trim="computedValue"
       :placeholder="'none'"
       @keyup.enter="onEnter"
       class="rounded px-1 w-36 invalid:bg-red-300"

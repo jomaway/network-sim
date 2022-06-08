@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { Node } from "@/core/network/components/NetworkComponents";
+import { Node } from "@/core/network/components/Node";
 import BaseDialog from "./BaseDialog.vue";
 
 const props = defineProps({

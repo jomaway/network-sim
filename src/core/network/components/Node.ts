@@ -26,14 +26,15 @@ export abstract class Node  {
   isType(nType : NodeType) : boolean {
     return this.getNodeType() === nType;
   }
+
   abstract isAddressable () : boolean;
 
   abstract getNodeType() : NodeType;
 
   abstract disconnectAllLinks() : void;
   abstract getConnectedLinks(): Array<Link>;
+  abstract getMediaAccessControll(): MediaAccessControll
 
-  abstract getMediaAccessControll(): MediaAccessControll;
   abstract hasFreePort() : boolean;
   abstract getNextFreePort() : Port;
 

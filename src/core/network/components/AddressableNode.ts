@@ -1,13 +1,15 @@
-import { getUniqueMacAddr } from "../NetworkManager";
-import { ArpHandler } from "../protocols/ARP";
-import { MacAddr } from "../protocols/Ethernet";
-import { IPv4Addr } from "../protocols/IPv4";
-import { IpHandler, MediaAccessControll, MediaAccessController } from "../protocols/networkStack";
-import { Link } from "./Link";
 import { NodeID } from "./NetworkComponents";
 import { Node } from "./Node";
-import { NetworkInterface } from "./NetworkInterface";
 import { Port } from "./Port";
+import { Link } from "./Link";
+import { NetworkInterface } from "./NetworkInterface";
+import { getUniqueMacAddr } from "../NetworkManager";
+
+import { MediaAccessControll, MediaAccessController } from "../protocols/networkStack";
+import { MacAddr } from "../protocols/Ethernet";
+import { IPv4Addr, IpHandler } from "../protocols/IPv4";
+import { ArpHandler } from "../protocols/ARP";
+import { ICMPHandler } from "../protocols/ICMP";
 
 export abstract class AdressableNode extends Node {
   networkInterfaces: Array<NetworkInterface>;
@@ -15,14 +17,20 @@ export abstract class AdressableNode extends Node {
   maController: MediaAccessController
   arpHandler: ArpHandler
   ipHandler: IpHandler
+  icmpHandler: ICMPHandler
 
   constructor(id: NodeID) {
     super(id);
     this.networkInterfaces = []
-    this.ipHandler = new IpHandler(this)
-    this.arpHandler = new ArpHandler(this)
-    // important init after other handlers
     this.maController = new MediaAccessController(this)
+    this.arpHandler = new ArpHandler(this)
+    this.ipHandler = new IpHandler(this)
+    this.icmpHandler = new ICMPHandler(this)
+    // important init after other handlers
+  }
+
+  getNetworkLayer() {
+    return this.ipHandler
   }
 
   isAddressable(): boolean {
@@ -107,5 +115,25 @@ export abstract class AdressableNode extends Node {
    */
   getDefaultIface() : NetworkInterface {
     return this.networkInterfaces[0]
+  }
+
+  /**
+   * 
+   * @returns 
+   */
+  save(): object { 
+    // do something.
+    let n = super.save()
+    n["ipconfig"] = this.getDefaultIface().getConfig()
+    return n
+  }
+
+  load(data: any): void {
+    // do something
+    super.load(data);
+
+    this.getDefaultIface().setConfig(data.ipconfig)
+
+    console.log("Load Node:", this.id, this.name, this.getNodeType(), this);
   }
 }
