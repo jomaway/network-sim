@@ -1,7 +1,7 @@
 import { Frame } from "../protocols/Ethernet"
 import { MediaAccessControll } from "../protocols/networkStack"
 import { Link } from "./Link"
-import { Node } from "./NetworkComponents"
+import { Node } from "./Node"
 
 export class Port {
   link: Link

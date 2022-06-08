@@ -1,10 +1,9 @@
-//import { Node, NodeID, NodeType } from "./components/Node";
-//import { Host } from "./components/Host";
-//import { Switch } from "./components/Switch";
-//import { Router } from "./components/Router";
-//import { Cloud } from "./components/Cloud";
-//import { Connectable, Connector } from "./components/Connector";
-import { Node, NodeID, NodeType, Host, Switch, Router, Cloud } from "./components/NetworkComponents";
+import { NodeID, NodeType } from "./components/NetworkComponents";
+import { Node } from "./components/Node"
+import { Host } from "./components/Host";
+import { Switch } from "./components/Switch";
+import { Router } from "./components/Router";
+import { Cloud } from "./components/Cloud";
 import { Link, LinkID } from "./components/Link";
 import { Port } from "./components/Port";
 import TM, { TrafficManager } from "./TrafficManager";

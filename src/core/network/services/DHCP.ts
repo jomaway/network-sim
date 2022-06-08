@@ -1,5 +1,4 @@
-import { IPv4Config } from "../components/Adressable";
-import { Host } from "../components/NetworkComponents";
+import { Host } from "../components/Host";
 import { Storeable } from "../NetworkManager";
 import { Frame, FrameType, MacAddr } from "../protocols/Ethernet";
 import { IPv4Addr, Packet, Subnetmask } from "../protocols/IPv4";

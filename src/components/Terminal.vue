@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-//import { Node } from "@/core/network/components/Node";
 import { Host } from "../core/network/components/NetworkComponents";
 
 const props = defineProps({

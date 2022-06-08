@@ -1,10 +1,7 @@
-import { mdiSleep } from "@mdi/js"
-import { Connector, NIC } from "../components/Connector"
-import { Host } from "../components/Host"
-import { AdressableNode, Node } from "../components/NetworkComponents"
+import { AdressableNode } from "../components/AddressableNode";
 import { NetworkInterface } from "../components/NetworkInterface"
 import { sleep } from "../Helper"
-import TM, { TrafficEvent } from "../TrafficManager"
+import TM from "../TrafficManager"
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet"
 import { IPv4Addr } from "./IPv4"
 

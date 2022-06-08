@@ -1,4 +1,4 @@
-import { NodeType } from "./Node";
+import { NodeType } from "./NetworkComponents";
 
 export type Position = { x: number, y: number }
 

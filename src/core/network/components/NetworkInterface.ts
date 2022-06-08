@@ -1,10 +1,9 @@
 import { mdiThermometerMinus } from "@mdi/js";
 import { getUniqueMacAddr } from "../NetworkManager";
 import {  MacAddr } from "../protocols/Ethernet";
-import { IPv4Addr,  Subnetmask } from "../protocols/IPv4";
+import { IPv4Addr,  isValidIp,  Subnetmask } from "../protocols/IPv4";
 import { MediaAccessControll, MediaAccessController } from "../protocols/networkStack";
-import { isValidIp } from "./Adressable";
-import { Node } from "./NetworkComponents";
+import { Node } from "./Node";
 import { Port } from "./Port";
 
 export class NetworkInterface {

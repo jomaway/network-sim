@@ -1,7 +1,5 @@
-import { NodeID } from './Node'
 import { Frame } from '../protocols/Ethernet'
 import TM, { TrafficEvent, TrafficManager } from '../TrafficManager';
-import { Connector } from './Connector';
 import { Port } from './Port';
 
 export type LinkID = string;
@@ -44,7 +42,6 @@ export class Link {
   }
 
   async transfer(orig: Port, frame: Frame) {
-    //const dest = (orig === this.c1) ? this.c2 : this.c1;
     if (orig !== this.p1) {
       this.swap()
     }

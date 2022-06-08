@@ -1,9 +1,12 @@
 import { Port } from "../components/Port";
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet";
 import { Packet as ArpPacket, ArpHandler } from "../protocols/ARP";
-import { IPv4Addr, Packet as IpPacket } from "../protocols/IPv4";
+import { IPv4Addr, isValidIp, Packet as IpPacket } from "../protocols/IPv4";
 import { NetworkInterface } from "../components/NetworkInterface";
-import { AdressableNode, Host, NodeType, Switch } from "../components/NetworkComponents";
+import { NodeType } from "../components/NetworkComponents";
+import { AdressableNode } from "../components/AddressableNode";
+import { Switch } from "../components/Switch";
+import { Host } from "../components/Host";
 import TM from "../TrafficManager";
 
 export class IpHandler {
@@ -28,7 +31,7 @@ export class IpHandler {
   async sendPacket(packet: IpPacket) {
     let dstIp = packet.dst
     // check if the destination is a valid ip address
-    if (!this.isValidIp(dstIp)) {
+    if (!isValidIp(dstIp)) {
       throw new Error(`can't send packet. ${dstIp} is no valid ip.`)
     }
     // get iface associatet with  the source ip address
@@ -49,19 +52,6 @@ export class IpHandler {
     }
     const frame = new Frame(iface.getMacAddr(),dstMac,FrameType.IPv4,packet)
     this.node.maController.transmitFrame(frame)
-  }
-
-  isValidIp(value:string) : boolean {
-    const parts = value.trim().split('.')
-    if (parts.length !== 4) return false
-    //const nums = parts.map((numStr: string) => parseInt(numStr,10))
-    
-    for (let i=0; i <4; i++) {
-      const num = parseInt(parts[i])
-      if (isNaN(num)) return false
-      if (num < 0 || num > 255) return false
-    }
-    return true
   }
 
   isIpBroadcast(addr){

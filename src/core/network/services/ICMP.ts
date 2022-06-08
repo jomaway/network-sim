@@ -3,7 +3,7 @@ import { IPv4Addr,  Packet } from "../protocols/IPv4";
 import TM from "../TrafficManager";
 import { mdiThumbsUpDown } from "@mdi/js";
 import { sleep } from "../Helper";
-import { AdressableNode } from "../components/NetworkComponents";
+import { AdressableNode } from "../components/AddressableNode";
 
 const ICMP_REQUEST = Symbol("icmp-req")
 const ICMP_RESPONSE = Symbol("icmp-res")

@@ -1,13 +1,13 @@
 import { Service, SID } from "./Services";
-import { Host } from "../components/Host";
+import { Host } from "../components/NetworkComponents";
 import { IPv4Addr,  Packet } from "../protocols/IPv4";
 
 
 export class MsgHandler implements Service {
-  owner: Host
+  node: Host
 
   constructor(owner: Host) {
-    this.owner = owner
+    this.node = owner
   }
 
   getServiceID() {
@@ -16,9 +16,9 @@ export class MsgHandler implements Service {
 
   sendRequest(args: any){
     const { dstIp, msg } = args
-    const srcIp = this.owner.getIpAddr()
+    const srcIp = this.node.getDefaultIface().getIpAddr()
     const packet = new Packet(srcIp,dstIp,SID.MSG,msg)
-    this.owner.sendPacket(packet)
+    this.node.ipHandler.sendPacket(packet)
   }
 
   handleIpPacket(packet: Packet) {

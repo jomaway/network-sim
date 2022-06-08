@@ -4,9 +4,9 @@ import { useToast } from "vue-toastification";
 import { useNetworkStore } from "../stores/network";
 import * as vNG from "v-network-graph";
 
-import { LinkColor, NodeColor } from "@/core/network/components/Drawable";
-import { NodeType } from "@/core/network/components/Node";
-import { Server as DHCPServer } from "@/core/network/services/DHCP";
+import { LinkColor } from "@/core/network/components/Drawable";
+import { NodeType } from "@/core/network/components/NetworkComponents";
+import { SID } from "../core/network/services/Services";
 
 import FloatMenu from "@/components/FloatMenu.vue";
 import ContextMenu from "@/components/ContextMenu.vue";
@@ -14,7 +14,6 @@ import AddLinkDialog from "@/components/dialogs/AddLinkDialog.vue";
 import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
 import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
 import SettingsDialog from "./dialogs/SettingsDialog.vue";
-import { SID } from "../core/network/services/Services";
 
 defineProps({
   eventHandlers: Object,
