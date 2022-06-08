@@ -161,7 +161,6 @@ const getNodeContextMenuItems = (nodeID) => {
             AddLinkDialog,
             { from: node, to: networkStore.getSelectedNode }
           );
-          console.log("Returned", from, to);
           networkStore.manager.addLink(from, to);
         } catch (err) {
           toast.error(err.message);

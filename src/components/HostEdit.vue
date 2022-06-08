@@ -1,15 +1,15 @@
 <script setup>
 import { computed, ref, watch } from "vue";
-import { NodeType } from "../core/network/components/NetworkComponents";
-import { Node } from "@/core/network/components/Node";
+
+import { Host } from "@/core/network/components/Host";
 
 import IconClose from "./icons/IconClose.vue";
-import NetworkInterfaceEdit from "./edits/NetworkInterfaceEdit.vue";
+import NetworkInterfaceEdit from "./NetworkInterfaceEdit.vue";
 import IpAddrInputField from "./IpAddrInputField.vue";
 
 const props = defineProps({
   node: {
-    type: Node,
+    type: Host,
     required: true,
   },
 });
@@ -29,18 +29,18 @@ const name = computed({
 const ifaceList = computed(() => props.node.getIfaceList());
 const iface = ref(ifaceList.value[0]);
 
-let dhcpConf = null;
-let hasDHCPServer = null;
-
-if (props.node.isType(NodeType.Host)) {
-  dhcpConf = computed({
-    get: () => props.node.dhcpServer.conf,
-    set: (value) => props.node.dhcpServer.setConf(value),
-  });
+const dhcpConf = computed({
+  get: () => props.node.dhcpServer.getConfig(),
+  set: (value) => props.node.dhcpServer.setConfig(value),
+});
   
-  hasDHCPServer = computed(() => props.node.dhcpServer.isRunning());
-}
+const dhcpServerRunning = computed(() => props.node.dhcpServer.isRunning());
 
+const toogleDhcpServer = () => {
+  dhcpServerRunning.value
+    ? props.node.dhcpServer.stop()
+    : props.node.dhcpServer.start();
+}
 
 const close = () => {
   emit("close");
@@ -77,14 +77,25 @@ const close = () => {
 
     <network-interface-edit :iface="iface"/>
 
-    <div class=" border-t pt-2" v-if="hasDHCPServer">
-      <h3 class="font-bold">DHCP-Server:</h3>
+    <div v-if="node.getName() === 'Server'">  <!-- ugly workaround fix later. -->
+      <div class="flex justify-between border-t pt-2">
+        <h3 class="font-bold">DHCP-Server:</h3>
+        <button
+          class="rounded p-1 text-sm bg-gray-100"
+          :class="dhcpServerRunning ? 'bg-red-300' : 'bg-green-300'"
+          @click="toogleDhcpServer"
+        >
+          {{ dhcpServerRunning ? "Stop" : "Start" }}
+        </button>
+      </div>
+
       <div class="flex flex-col gap-1 mt-2">
         <ip-addr-input-field v-model="dhcpConf.first" label="Range-Start" />
         <ip-addr-input-field v-model="dhcpConf.last"  label="Range-End" />
         <ip-addr-input-field v-model="dhcpConf.snm" isMask label="Subnetzmaske" />
         <ip-addr-input-field v-model="dhcpConf.gw" label="Gateway" />
         <ip-addr-input-field v-model="dhcpConf.dns" label="DNS" />
+        <p class="text-right">Running: {{ dhcpServerRunning ? "✔️" : "❌" }}</p>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { NodeID, NodeType } from "./NetworkComponents";
-import { AdressableNode } from "./AddressableNode";
+import { AddressableNode } from "./AddressableNode";
 
-export class Router extends AdressableNode {
+export class Router extends AddressableNode {
 
   constructor(id: NodeID, name: string = "Router") {
     super(id);

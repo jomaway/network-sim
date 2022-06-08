@@ -1,4 +1,4 @@
-import { AdressableNode } from "../components/AddressableNode";
+import { AddressableNode } from "../components/AddressableNode";
 import { TransportLayer } from "./networkStack";
 
 export class TcpSegment {
@@ -6,9 +6,9 @@ export class TcpSegment {
 }
 
 export class TCPHandler implements TransportLayer {
-  node: AdressableNode;
+  node: AddressableNode;
 
-  constructor(node: AdressableNode) {
+  constructor(node: AddressableNode) {
     this.node = node;
   }
 

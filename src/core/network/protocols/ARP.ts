@@ -1,4 +1,4 @@
-import { AdressableNode } from "../components/AddressableNode";
+import { AddressableNode } from "../components/AddressableNode";
 import { NetworkInterface } from "../components/NetworkInterface"
 import { sleep } from "../Helper"
 import TM from "../TrafficManager"
@@ -31,13 +31,13 @@ export class ArpPacket {
 
 
 export class ArpHandler {
-  node: AdressableNode
+  node: AddressableNode
   arpCache: Map<IPv4Addr,MacAddr>
   arpCounter: number;
   onResolve: Function;
   pending: boolean
 
-  constructor(node: AdressableNode) {
+  constructor(node: AddressableNode) {
     this.node = node
     this.arpCache = new Map()
     this.arpCounter = 0;

@@ -122,14 +122,6 @@ export const useNetworkStore = defineStore({
       this.manager.reset();
       this.$reset;
     },
-    updateLayoutForNode(node) {
-      //this.layouts.nodes[node.id] = node.drawable.pos;
-    },
-    updateLayouts() {
-      this.manager.nodes.forEach((node) => {
-        this.updateLayoutForNode(node);
-      });
-    },
     saveNetwork() {
       const data = this.manager.saveNetwork();
       data["layouts"] = this.layouts;

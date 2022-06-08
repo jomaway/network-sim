@@ -1,12 +1,12 @@
 import { NodeID, NodeType } from "./NetworkComponents";
-import { AdressableNode } from "./AddressableNode";
+import { AddressableNode } from "./AddressableNode";
 import { ICMPHandler } from "../protocols/ICMP"
 import { DHCPClient, DHCPServer } from "../protocols/DHCP";
 import { CommandHandler } from "../services/commands";
 import { TCPHandler } from "../protocols/TCP";
 import { UDPHandler } from "../protocols/UDP";
 
-export class Host extends AdressableNode {
+export class Host extends AddressableNode {
   tcpHandler: TCPHandler;
   udpHandler: UDPHandler;
   dhcpClient: DHCPClient;
@@ -41,5 +41,18 @@ export class Host extends AdressableNode {
 
   command() {
     return this.commandHandler
+  }
+
+  /* ------------ Serializeable ------------ */
+  save() : object {
+    let data = super.save()
+    data["dhcpServer"] = this.dhcpServer.save()
+    return data
+  }
+
+  load(data: any): void {
+    super.load(data)
+    this.dhcpServer.load(data.dhcpServer)
+    //if (data.dhcpServer.running === true) this.dhcpServer.start()
   }
 }

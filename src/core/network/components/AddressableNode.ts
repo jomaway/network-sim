@@ -11,7 +11,7 @@ import { IPv4Addr, IpHandler } from "../protocols/IPv4";
 import { ArpHandler } from "../protocols/ARP";
 import { ICMPHandler } from "../protocols/ICMP";
 
-export abstract class AdressableNode extends Node {
+export abstract class AddressableNode extends Node {
   networkInterfaces: Array<NetworkInterface>;
   
   maController: MediaAccessController
@@ -124,7 +124,7 @@ export abstract class AdressableNode extends Node {
   save(): object { 
     // do something.
     let n = super.save()
-    n["ipconfig"] = this.getDefaultIface().getConfig()
+    n["ipconfig"] = this.getDefaultIface().save()
     return n
   }
 
@@ -132,8 +132,6 @@ export abstract class AdressableNode extends Node {
     // do something
     super.load(data);
 
-    this.getDefaultIface().setConfig(data.ipconfig)
-
-    console.log("Load Node:", this.id, this.name, this.getNodeType(), this);
+    this.getDefaultIface().load(data.ipconfig)
   }
 }

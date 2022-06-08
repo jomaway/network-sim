@@ -1,4 +1,4 @@
-import { AdressableNode } from "../components/AddressableNode";
+import { AddressableNode } from "../components/AddressableNode";
 import { IPv4Addr,  IpPacket, Protocol } from "./IPv4";
 import TM from "../TrafficManager";
 import { sleep } from "../Helper";
@@ -13,11 +13,11 @@ enum ResultType {
 }
 
 export class ICMPHandler {
-  node: AdressableNode
+  node: AddressableNode
   pending: Boolean
   result: ResultType
 
-  constructor(node: AdressableNode ) {
+  constructor(node: AddressableNode ) {
     this.node = node
     this.pending = false
     this.result = null

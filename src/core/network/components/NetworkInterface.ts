@@ -68,23 +68,27 @@ export class NetworkInterface {
    * @param addr a valid ip addr.
    */
   setIpAddr (addr: IPv4Addr) : void {
-    if (!isValidIp(addr)) throw new Error("NIC.setIpAddr() - no valid ip address")
+    if (!this.isValid(addr)) throw new Error("NIC.setIpAddr() - no valid ip address")
     this.ipAddr = addr;
   }
 
   setSubnetmask (snm: Subnetmask) : void {
-    if (!isValidIp(snm)) throw new Error("NIC.setSubnetmask() - no valid snm address")
+    if (!this.isValid(snm)) throw new Error("NIC.setSubnetmask() - no valid snm address")
     this.snm = snm;
   }
 
   setGateway (gw: IPv4Addr) : void {
-    if (!isValidIp(gw) && gw !== "") throw new Error("NIC.setGateway() - no valid ip address")
+    if (!this.isValid(gw)) throw new Error("NIC.setGateway() - no valid ip address")
     this.gw = gw;
   }
 
   setDns (dns: IPv4Addr) : void {
-    if (!isValidIp(dns) && dns !== "") throw new Error("NIC.setDns() - no valid ip address")
+    if (!this.isValid(dns)) throw new Error("NIC.setDns() - no valid ip address")
     this.dns = dns;
+  }
+
+  isValid(ip) {
+    return (isValidIp(ip) || ip === "")
   }
 
   // for debug only
@@ -99,10 +103,21 @@ export class NetworkInterface {
     }
   }
   setConfig(conf) {
-    this.setName(conf.name)
+    //this.setName(conf.name)
     this.setIpAddr(conf.addr)
     this.setSubnetmask(conf.snm)
     this.setGateway(conf.gw)
     this.setDns(conf.dns)
+  }
+
+  /* ------------ Serializeable ------------ */
+  save() : object {
+    return this.getConfig()
+  }
+
+  load(data: any): void {
+    this.name = data.name
+    this.macAddr = data.macAddr
+    this.setConfig(data)
   }
 }

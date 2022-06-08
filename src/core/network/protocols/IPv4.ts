@@ -1,5 +1,5 @@
 import { NodeType } from "../components/NetworkComponents";
-import { AdressableNode } from "../components/AddressableNode";
+import { AddressableNode } from "../components/AddressableNode";
 import { Host } from "../components/Host";
 import { NetworkInterface } from "../components/NetworkInterface";
 import { Frame, FrameType } from "./Ethernet";
@@ -36,9 +36,9 @@ export class IpPacket {
 }
 
 export class IpHandler implements NetworkLayer {
-  node: AdressableNode
+  node: AddressableNode
 
-  constructor(node: AdressableNode) {
+  constructor(node: AddressableNode) {
     this.node = node;
   }
 

@@ -4,7 +4,7 @@ import { useNetworkStore } from "@/stores/network";
 import Terminal from "@/components/Terminal.vue";
 import NetworkGraph from "@/components/NetworkGraph.vue";
 import FloatElement from "@/components/FloatElement.vue";
-import NodeInfo from "@/components/NodeInfo.vue";
+import HostEdit from "@/components/HostEdit.vue";
 import SimulationControls from "@/components/SimulationControls.vue";
 import { computed } from "vue";
 
@@ -35,7 +35,7 @@ const closeTerminal = () => {
           v-if="networkStore.nodeInfo.show"
           class="bg-amber-400 rounded"
         >
-          <node-info
+          <host-edit
             :node="editNode"
             @close="networkStore.nodeInfo.show = false"
           />

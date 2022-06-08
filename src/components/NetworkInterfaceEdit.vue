@@ -1,8 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { NetworkInterface } from '@/core/network/components/NetworkInterface';
-import IpAddrInputField from "../IpAddrInputField.vue";
-import CheckBox from '../CheckBox.vue';
+import IpAddrInputField from "./IpAddrInputField.vue";
 
 const props = defineProps({
   iface: NetworkInterface,
@@ -28,11 +27,7 @@ const dns = computed({
   set: (value) => props.iface.setDns(value),
 });
 
-const iface = props.iface;
-const isStaticConfig = computed({
-  get: () => iface.static,
-  set: (value) => (iface.static = value),
-})
+const isStaticConfig = computed(() => props.iface.static);
 
 </script>
 
@@ -47,7 +42,7 @@ const isStaticConfig = computed({
     <ip-addr-input-field v-model="snm" isMask label="Subnetzmaske" :disabled="isStaticConfig"/>
     <ip-addr-input-field v-model="gw" label="Gateway" :disabled="isStaticConfig"/>
     <ip-addr-input-field v-model="dns" label="DNS" :disabled="isStaticConfig"/>
-    <check-box v-model="isStaticConfig" label="Static Config" class="justify-end"/>
-    <!--<p class="text-right">Static: {{ iface.static ? "✔️" : "❌" }}</p>-->
+    <p class="text-right">Static: {{ isStaticConfig ? "✔️" : "❌" }}</p>
+    <!--<check-box v-model="isStaticConfig" label="Static Config" class="justify-end"/>-->
   </div>
 </template>

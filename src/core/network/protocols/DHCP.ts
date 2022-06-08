@@ -10,7 +10,7 @@ const DHCP_OFFER = Symbol("dhcp-offer")
 const DHCP_REQUEST = Symbol("dhcp-request")
 const DHCP_ACK = Symbol("dhcp-ack")
 
-enum DHCPType {
+enum DHCPMsgType {
   DISCOVER,
   OFFER,
   REQUEST,
@@ -37,34 +37,37 @@ class Ipv4Config {
   }
 }
 
-class Payload {
-  type: DHCPType
+
+class DHCPMsg {
+  type: DHCPMsgType
   macAddr: MacAddr
   ipConfig: Ipv4Config
-
-
-  constructor(type: DHCPType) {
+  
+  
+  constructor(type: DHCPMsgType) {
     this.type = type;
     this.macAddr = null;
     this.ipConfig = null
   }
-
+  
   setIpConfig(conf: Ipv4Config) {
     this.ipConfig = conf;
   }
-
+  
   toString():string {
     return JSON.stringify(this)
   }
-
+  
   static fromString(data: string) {
     const payloadData = JSON.parse(data)
-    const payload = new Payload(payloadData.type)
+    const payload = new DHCPMsg(payloadData.type)
     payload.macAddr = payloadData.macAddr
     payload.ipConfig = payloadData.ipConfig
     return payload
   }
 }
+
+type dhcpConfig = { first: string; last: string; snm: string; gw: string; dns: string; }
 
 export class DHCPClient {
   node: Host
@@ -88,7 +91,7 @@ export class DHCPClient {
     // Send Broadcast to discover DHCP Server.
     const SOURCE_IP = "0.0.0.0"
     const TARGET_IP = "255.255.255.255"  // Broadcast
-    const payload = new Payload(DHCPType.DISCOVER)
+    const payload = new DHCPMsg(DHCPMsgType.DISCOVER)
     payload.macAddr = this.node.getDefaultIface().getMacAddr()
     const packet = new IpPacket(SOURCE_IP, TARGET_IP, Protocol.DHCPServer, payload.toString())
     this.node.ipHandler.sendPacket(packet)
@@ -100,9 +103,9 @@ export class DHCPClient {
   }
 
   handleIpPacket(packet: IpPacket) {
-    const payload = Payload.fromString(packet.payload)
+    const payload = DHCPMsg.fromString(packet.payload)
     // handle offer
-    if ( payload.type = DHCPType.OFFER) {
+    if ( payload.type = DHCPMsgType.OFFER) {
       // check mac Addr
       const iface = this.node.getIfaceByMacAddr(payload.macAddr)
       if (iface === undefined) return
@@ -118,7 +121,7 @@ export class DHCPClient {
 export class DHCPServer extends Service implements Storeable {
   node: Host
   state: ServiceState
-  conf: {
+  config: {
     first: IPv4Addr,
     last: IPv4Addr,
     snm: Subnetmask,
@@ -131,7 +134,7 @@ export class DHCPServer extends Service implements Storeable {
     super()
     this.node = node
     this.state = ServiceState.idle
-    this.conf = {
+    this.config = {
       first: "",
       last: "",
       snm: "",
@@ -151,22 +154,26 @@ export class DHCPServer extends Service implements Storeable {
     return Protocol.DHCPServer
   };
 
-  setConf(conf) {
-    this.conf = conf
+  getConfig(): dhcpConfig {
+    return this.config
+  }
+
+  setConfig(conf: dhcpConfig ): void {
+    this.config = conf
   }
 
   getState(): ServiceState {
     return this.state
   }
 
-  sendDHCPOffer(discover: Payload) {
+  sendDHCPOffer(discover: DHCPMsg) {
     TM.log(`DHCP: ${this.node.getName()} send ${DHCP_OFFER.toString()}`)
     // Send Broadcast to discover DHCP Server.
     const SOURCE_IP = this.node.getDefaultIface().getIpAddr()
     const TARGET_IP = "255.255.255.255"  // Broadcast
-    const payload = new Payload(DHCPType.OFFER)
+    const payload = new DHCPMsg(DHCPMsgType.OFFER)
     payload.macAddr = discover.macAddr
-    payload.ipConfig = this.getFreeIpConf()
+    payload.ipConfig = new Ipv4Config(this.getNextFreeIpAddr(), this.config.snm, this.config.gw, this.config.dns)
     const packet = new IpPacket(SOURCE_IP, TARGET_IP, Protocol.DHCPClient, payload.toString())
 
     const frame = new Frame(this.node.getDefaultIface().getMacAddr(),discover.macAddr, FrameType.IPv4,packet)
@@ -174,9 +181,9 @@ export class DHCPServer extends Service implements Storeable {
   }
 
   handleIpPacket(packet: IpPacket) {
-    const payload = Payload.fromString(packet.payload)
+    const payload = DHCPMsg.fromString(packet.payload)
     // handle discover
-    if ( payload.type === DHCPType.DISCOVER) {
+    if ( payload.type === DHCPMsgType.DISCOVER) {
       TM.log(`DHCP: ${this.node.getName()} receive ${DHCP_DISCOVER.toString()}`)
       this.sendDHCPOffer(payload)
     } else {
@@ -184,21 +191,16 @@ export class DHCPServer extends Service implements Storeable {
     }
   };
 
-  getFreeIpConf(): Ipv4Config {
-    const config = new Ipv4Config(this.getNextFreeIpAddr(), this.conf.snm, this.conf.gw, this.conf.dns)
-    return config
-  }
-
   getNextFreeIpAddr() {
     // todo! this function is just a small workaround for testing. does not cover all cases.
-    let next = this.conf.first
+    let next = this.config.first
     while (this.inUse.includes(next)) {
       const parts = next.trim().split('.')
       const nums = parts.map((numStr: string) => parseInt(numStr,10))
       nums[3]++;
       next = nums.join('.')
 
-      if (next === this.conf.last) {
+      if (next === this.config.last) {
         throw Error("no free ip adresses")
       }
     } 
@@ -208,10 +210,17 @@ export class DHCPServer extends Service implements Storeable {
   }
 
   save() : object {
-    return this.conf
+    let data = {}
+    data["running"] = this.running
+    data["config"] = this.config
+    data["used"] = this.inUse 
+    return data
   }
 
-  load(data: object) {
-    this.setConf(data)
+  load(data: any) {
+    this.config = data.config
+    this.inUse = data.used
+    //data.used.forEach((addr) => this.inUse.push(addr))
+    this.running = data.running
   }
 }

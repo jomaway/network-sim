@@ -1,4 +1,4 @@
-import { AdressableNode } from "../components/AddressableNode";
+import { AddressableNode } from "../components/AddressableNode";
 import { NetworkInterface } from "../components/NetworkInterface";
 import { Switch } from "../components/Switch";
 import { Port } from "../components/Port";
@@ -78,9 +78,9 @@ export class SwitchPortController implements MediaAccessControll {
 }
 
 export class MediaAccessController implements MediaAccessControll {
-  node: AdressableNode;
+  node: AddressableNode;
 
-  constructor(node: AdressableNode) {
+  constructor(node: AddressableNode) {
     this.node = node;
   };
 
