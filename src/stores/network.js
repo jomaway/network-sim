@@ -34,8 +34,8 @@ export const useNetworkStore = defineStore({
         },
       },
       settings: {
-        showIpBatches: true,
-        showGrid: true,
+        showIpBatches: false,
+        showGrid: false,
         panEnabled: true,
         zoomEnabled: true,
       },
@@ -53,7 +53,7 @@ export const useNetworkStore = defineStore({
             node.id == state.nodeInfo.nodeID && state.nodeInfo.show
               ? "#FFBF00"
               : colorMap.get(node.getNodeType()), // node.drawable.color,
-          dType: node.isType(NodeType.Host) ? "circle" : "rect", // node.drawable.shape,
+          dType: node.isType(NodeType.Host) ? "host" : "rect", // node.drawable.shape,
           size: node.isType(NodeType.Cloud) ? 50 : 26, //.size,
           icon: "&#xe320",
         };

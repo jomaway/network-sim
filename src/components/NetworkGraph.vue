@@ -13,6 +13,9 @@ import AddLinkDialog from "@/components/dialogs/AddLinkDialog.vue";
 import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
 import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
 import SettingsDialog from "./dialogs/SettingsDialog.vue";
+import MacTableDialog from "./dialogs/MacTableDialog.vue";
+import IconHost from "./icons/nodes/IconHost.vue";
+import IconCloud from "./icons/nodes/IconCloud.vue";
 
 defineProps({
   eventHandlers: Object,
@@ -131,7 +134,7 @@ const getViewContextMenuItems = (pos) => {
         networkStore.moveNode(c.getNodeID(), pos);
         //networkStore.updateLayoutForNode(i);
       },
-    })
+    });
   }
   return items;
 };
@@ -186,8 +189,11 @@ const getNodeContextMenuItems = (nodeID) => {
     case NodeType.Switch:
       items.push({
         name: "Show MacTable",
-        onSelect: () => {
-          console.warn("not implemented");
+        onSelect: async () => {
+          //console.warn("not implemented");
+          await dialogWrapperRef.value.openDialog(MacTableDialog, {
+            networkSwitch: node,
+          });
         },
       });
       break;
@@ -239,7 +245,10 @@ const getNodeContextMenuItems = (nodeID) => {
           name: "Connect to Cloud",
           onSelect: () => {
             try {
-              networkStore.manager.addLink(node.getIfaceByName("WAN").port, networkStore.manager.getCloud().getNextFreePort());
+              networkStore.manager.addLink(
+                node.getIfaceByName("WAN").port,
+                networkStore.manager.getCloud().getNextFreePort()
+              );
               const ipconf = networkStore.manager.getCloud().getDynamicIP();
               node.setIpConfig(ipconf, "WAN");
             } catch (err) {
@@ -452,9 +461,8 @@ const calcLinkCenterPos = (link) => {
     :layers="layers"
   >
     <!-- Replace the node component -->
-    <template #override-node="{ nodeId, config, ...slotProps }">
-      <svg
-        viewBox="0 0 512 512"
+    <template #override-node="{ nodeId, scale, config, ...slotProps }">
+      <IconCloud 
         x="-80"
         y="-60"
         width="160"
@@ -462,14 +470,15 @@ const calcLinkCenterPos = (link) => {
         :fill="config.color"
         v-if="nodeId === '-100'"
         v-bind="slotProps"
-      >
-        <g>
-          <path d="M489.579,254.766c-12.942-16.932-30.829-29.887-50.839-36.933c-0.828-48.454-40.501-87.618-89.148-87.618
-            c-7.618,0-15.213,0.993-22.647,2.958c-12.102-15.076-27.37-27.615-44.441-36.457c-19.642-10.173-40.881-15.331-63.127-15.331
-            c-74.705,0-135.736,59.676-137.931,133.859C33.885,227.82,0,271.349,0,321.107c0,60.383,49.125,109.508,109.508,109.508h292.983
-            C462.875,430.615,512,381.49,512,321.107C512,296.896,504.246,273.956,489.579,254.766z"/>
-        </g>
-      </svg>
+      />
+      <icon-host
+        :width="60 * scale"
+        :height="60 * scale"
+        :x="-30 * scale"
+        :y="-30 * scale"
+        v-if="networkStore.getNodes[nodeId].type === NodeType.Host"
+        v-bind="slotProps"
+      />
       <!-- Use v-html to interpret escape sequences for icon characters. -->
     </template>
     <!-- Additional layer -->
@@ -513,7 +522,7 @@ const calcLinkCenterPos = (link) => {
           font-size="12px"
           dominant-baseline="central"
           text-anchor="middle"
-          fill="#ffffff"
+          fill="#000"
         >
           {{ host.getDefaultIface().getCIDR() }}
         </text>

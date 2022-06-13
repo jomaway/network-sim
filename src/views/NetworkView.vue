@@ -7,6 +7,7 @@ import FloatElement from "@/components/FloatElement.vue";
 import HostEdit from "@/components/HostEdit.vue";
 import SimulationControls from "@/components/SimulationControls.vue";
 import { computed } from "vue";
+import MacTable from "../components/MacTable.vue";
 
 const networkStore = useNetworkStore();
 
