@@ -4,7 +4,6 @@ import { sleep } from "../Helper"
 import TM from "../TrafficManager"
 import { Frame, FrameType, MacAddr, MAC_BROADCAST_ADDR } from "./Ethernet"
 import { IPv4Addr } from "./IPv4"
-import { NetworkLayer } from "./networkStack";
 
 const ZERO_MAC = "00-00-00-00-00-00"
 

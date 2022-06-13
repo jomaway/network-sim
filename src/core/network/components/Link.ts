@@ -9,7 +9,7 @@ export class Link {
   p1: Port
   p2: Port
   active: boolean
-  lastFrame: Frame
+  lastFrame: Frame | null
 
   constructor(id: LinkID, p1: Port, p2: Port) {
     this.id = id;
@@ -43,11 +43,13 @@ export class Link {
       this.swap()
     }
     const dest = this.p2;
+    console.log(`transfer ${frame.dst}`)
     this.active = true
     this.lastFrame = frame
     await TM.notify(TrafficEvent.LinkActive, this)
-    dest.rx(frame)
     this.active=false
+    console.log(`transferEnd ${frame.dst}`)
+    dest.rx(frame)
   }
 
   isActive() {

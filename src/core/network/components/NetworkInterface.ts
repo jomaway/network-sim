@@ -91,6 +91,27 @@ export class NetworkInterface {
     return (isValidIp(ip) || ip === "")
   }
 
+  getCIDR() {
+    const ip = this.getIpAddr()
+    const cidr = this.getSubnetmask().split('.').map((octet) => {
+      const value = parseInt(octet)
+      switch (value) {
+        case 255: return 8
+        case 254: return 7
+        case 252: return 6
+        case 248: return 5
+        case 240: return 4
+        case 224: return 3
+        case 192: return 2
+        case 128: return 1
+        default: return 0
+      }
+    }).reduce<number>((a, b) => a + b, 0)
+    
+    return `${ip} /${cidr}`
+     
+  }
+
   // for debug only
   getConfig() {
     return {
@@ -117,7 +138,7 @@ export class NetworkInterface {
 
   load(data: any): void {
     this.name = data.name
-    this.macAddr = data.macAddr
+    this.macAddr = data.mac
     this.setConfig(data)
   }
 }

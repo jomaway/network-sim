@@ -5,7 +5,7 @@ import { NetworkInterface } from "../components/NetworkInterface";
 import { Frame, FrameType } from "./Ethernet";
 import { NetworkLayer } from "./networkStack";
 
-import TM from "../TrafficManager";
+import TM, { TrafficEvent } from "../TrafficManager";
 
 export type IPv4Addr = string;
 export type Subnetmask = string;

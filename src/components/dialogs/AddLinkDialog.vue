@@ -11,11 +11,9 @@ const props = defineProps({
 const emit = defineEmits(["confirm"]);
 
 const confirm = () => {
-  // do something
-  console.log("confirm pressed", selection.value.from, selection.value.to);
   emit("confirm", {
-    from: selection.value.from, //.getConnectorByID(selection.value.from),
-    to: selection.value.to, //.getConnectorByID(selection.value.to),
+    from: selection.value.from,
+    to: selection.value.to,
   });
 };
 

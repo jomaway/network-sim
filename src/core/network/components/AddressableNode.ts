@@ -47,7 +47,7 @@ export abstract class AddressableNode extends Node {
    * 
    * @returns a unconnected network interface if available otherwise undefined
    */
-  getNextFreeIface() : NetworkInterface {
+  getNextFreeIface() : NetworkInterface | undefined {
     return this.networkInterfaces.find((iface) => !iface.port.isConnected())
   }
 
@@ -56,7 +56,7 @@ export abstract class AddressableNode extends Node {
    * @param name name to look for
    * @returns iface with associated name or undefined if it does not exists
    */
-  getIfaceByName(name: string) : NetworkInterface {
+  getIfaceByName(name: string) : NetworkInterface | undefined {
     return this.networkInterfaces.find((iface) => iface.name === name);
   }
 
@@ -65,7 +65,7 @@ export abstract class AddressableNode extends Node {
    * @param macAddr mac-address to look for
    * @returns iface with associated mac-address or undefined if it does not exists
    */
-  getIfaceByMacAddr(macAddr: MacAddr) : NetworkInterface {
+  getIfaceByMacAddr(macAddr: MacAddr) : NetworkInterface | undefined {
     // macs should be unique otherwise only the first one found will be returned. 
     return this.networkInterfaces.find((iface) => iface.macAddr === macAddr);
   }
@@ -75,7 +75,7 @@ export abstract class AddressableNode extends Node {
    * @param ipAddr ip-address to look for
    * @returns iface with associated ip-address or undefined if it does not exists
    */
-  getIfaceByIpAddr(ipAddr: IPv4Addr) : NetworkInterface {
+  getIfaceByIpAddr(ipAddr: IPv4Addr) : NetworkInterface | undefined {
     // if multiple nics have the same ip addr, this will only return the first one. 
     return this.networkInterfaces.find((iface) => iface.ipAddr === ipAddr);
   }

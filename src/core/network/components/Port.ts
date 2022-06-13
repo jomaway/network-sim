@@ -4,7 +4,7 @@ import { Link } from "./Link"
 import { Node } from "./Node"
 
 export class Port {
-  link: Link
+  link: Link | null
   node: Node
   maController: MediaAccessControll
   
@@ -32,7 +32,7 @@ export class Port {
 
   tx(frame: Frame) {
     if (this.isConnected()) {
-      this.link.transfer(this, frame)
+      this.link?.transfer(this, frame)
     } else {
       // todo!() think about how this should be handled
       throw new Error(`${this}: No link connected`)

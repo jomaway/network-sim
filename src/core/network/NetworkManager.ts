@@ -106,7 +106,7 @@ export class NetworkManager {
     return ++this.lastUsedID
   }
 
-  getNodeByID(id: NodeID) : Node {
+  getNodeByID(id: NodeID) : Node | undefined {
     if (typeof(id) === "string") {
       id = parseInt(id)
     }
@@ -122,7 +122,7 @@ export class NetworkManager {
   }
 
   getAllFromType(nodeType: NodeType) {
-    return this.nodes.filter((node) => node.getNodeType() === nodeType)
+    return this.nodes.filter((node) => node.isType(nodeType))
   }
 
   getAllHosts() : Host[] {
@@ -131,17 +131,6 @@ export class NetworkManager {
 
   getAllRouters() : Router[] {
     return this.getAllFromType(NodeType.Router).map((node) => node as Router)
-  }
-
-  randomIPs() {
-    const hosts = this.getAllHosts()
-    const tmp = []
-
-    hosts.forEach((host) => {
-      const randomIp = "10.13.200." + Math.floor(Math.random() * 255 )
-      host.getDefaultIface().setIpAddr(randomIp)
-      tmp.push(randomIp)
-    })
   }
 
   saveNetwork() : object {
@@ -161,7 +150,7 @@ export class NetworkManager {
     return result
   }
 
-  loadNetwork(data) {
+  loadNetwork(data: any) {
     // reset components
     this.nodes = []
     this.links = []

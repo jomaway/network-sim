@@ -8,6 +8,7 @@ import { ArpPacket as ArpPacket, ArpHandler } from "../protocols/ARP";
 import { IpPacket } from "../protocols/IPv4";
 import { TcpSegment } from "./TCP";
 import { UdpSegment } from "./UDP";
+import TM, { TrafficEvent } from "../TrafficManager";
 
 export interface ApplicationLayer {
   receiveData: (data:any) => void;
@@ -47,7 +48,7 @@ export class SwitchPortController implements MediaAccessControll {
     const dstPort = this.lookUpMacAddr(frame.dst)
     if (dstPort) {
       // forward frame through that port.
-      this.device.ports.find((port: Port) => port === dstPort ).tx(frame)
+      this.device.ports.find((port: Port) => port === dstPort )?.tx(frame)
     } else {
       // Broadcast message
       this.device.ports.filter((port : Port) => port.isConnected())
@@ -84,7 +85,7 @@ export class MediaAccessController implements MediaAccessControll {
     this.node = node;
   };
 
-  receiveFrame (port: Port, frame: Frame) : void {
+  async receiveFrame (port: Port, frame: Frame) : Promise<void> {
     //  only process frame if it has a valid destination mac-address
     const macAddressList = this.node.getIfaceList().map((ni: NetworkInterface) => ni.getMacAddr());
     console.log("#Debug: MediaAccessController - Node ", this.node.getNodeID(),  "macAddressList: ", macAddressList);
@@ -107,8 +108,9 @@ export class MediaAccessController implements MediaAccessControll {
    * 
    * @param frame frame to be transmitted
    */
-  transmitFrame (frame: Frame) :void {
+  async transmitFrame (frame: Frame) {
     const iface = this.node.getIfaceByMacAddr(frame.src)
-    iface.port.tx(frame)
+    await TM.notify(TrafficEvent.BeforeTransmit)
+    iface?.port.tx(frame)
   };
 }

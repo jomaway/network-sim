@@ -501,10 +501,10 @@ const calcLinkCenterPos = (link) => {
     </template>
     <template #batches="{ scale }" v-if="networkStore.settings.showIpBatches">
       <svg
-        v-for="host in networkStore.manager.layouts"
+        v-for="host in networkStore.manager.getAllHosts()"
         :key="host.id"
-        :x="host.pos.x - 20 * scale"
-        :y="host.pos.y - 40 * scale"
+        :x="networkStore.layouts.nodes[host.id].x - 20 * scale"
+        :y="networkStore.layouts.nodes[host.id].y - 40 * scale"
       >
         <rect width="100" height="24" rx="15" ry="15" fill="#aed6f1" />
         <text
@@ -515,7 +515,7 @@ const calcLinkCenterPos = (link) => {
           text-anchor="middle"
           fill="#ffffff"
         >
-          {{ host.getCIDR() }}
+          {{ host.getDefaultIface().getCIDR() }}
         </text>
       </svg>
       <!-- 
