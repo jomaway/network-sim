@@ -1,7 +1,11 @@
-import { Router } from "../components/Router";
+import { Router } from "../components/depricated/Router";
 import { IPv4Addr, Packet } from "./IPv4";
 import { Service, SID } from "../services/Services";
 import TM from "../TrafficManager";
+
+// ****************
+// todo! change 
+// **************
 
 export class NATHandler  {
   owner: Router

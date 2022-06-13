@@ -1,13 +1,18 @@
-import { Frame } from "../protocols/Ethernet";
-import { Server as DHCPServer } from "../services/DHCP";
-import { Connector } from "./Connector";
-import { NodeColor, NodeIcon } from "./Drawable";
-import { Host } from "./Host";
-import { Link } from "./Link";
-import { Node, NodeID, NodeType } from "./Node";
-import { Switch } from "./Switch";
+import { NodeType } from "./NetworkComponents"
+import { Switch } from "./Switch"
 
+export class Cloud extends Switch {
 
+  constructor(id) {
+    super(id, 100)
+  }
+
+  getNodeType(): NodeType {
+    return NodeType.Cloud
+  }
+}
+
+/*
 export class Cloud extends Switch {
   connections: Array<Link>
   dhcpServer: DHCPServer
@@ -40,7 +45,7 @@ export class Cloud extends Switch {
     return this.dhcpServer.getFreeIpConf()
   }
 
-  /* ---------- Storage methods  ----------*/
+
 
   save() {
     let n = super.save()
@@ -54,3 +59,4 @@ export class Cloud extends Switch {
   }
 
 }
+*/

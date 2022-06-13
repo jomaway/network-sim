@@ -1,4 +1,4 @@
-import { NodeType } from "./Node";
+import { NodeType } from "./NetworkComponents";
 
 export type Position = { x: number, y: number }
 
@@ -30,8 +30,16 @@ export enum NodeColor {
   Host = "#EF4444",
   Switch = "#65A30D",
   Router = "#14B8A6",
-  Internet = "#25a0f3"
+  Cloud = "#25a0f3"
 }
+
+const colorMap = new Map() 
+
+colorMap.set(NodeType.Host, NodeColor.Host)
+colorMap.set(NodeType.Switch, NodeColor.Switch)
+colorMap.set(NodeType.Router, NodeColor.Router)
+colorMap.set(NodeType.Cloud, NodeColor.Cloud)
+
 
 export enum LinkColor {
   idle = "#3498db",

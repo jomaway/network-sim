@@ -11,17 +11,15 @@ const props = defineProps({
 const emit = defineEmits(["confirm"]);
 
 const confirm = () => {
-  // do something
-  console.log("confirm pressed", selection.value.from, selection.value.to);
   emit("confirm", {
-    from: props.from.getConnectorByID(selection.value.from),
-    to: props.to.getConnectorByID(selection.value.to),
+    from: selection.value.from,
+    to: selection.value.to,
   });
 };
 
 const selection = ref({
-  from: props.from.getNextFreeConnector().id,
-  to: props.to.getNextFreeConnector().id,
+  from: props.from.getNextFreePort(),
+  to: props.to.getNextFreePort(),
 });
 </script>
 
@@ -32,21 +30,23 @@ const selection = ref({
         <h3>
           From: <b>{{ from.name ?? from.getNodeId() }}</b>
         </h3>
-        <select class="rounded" v-model="selection.from">
-          <option v-for="c in from.getFreeConnectors()" :key="c.id">
-            {{ c.id }}
+        <select class="rounded" v-model="selection.from" v-if="from.isAddressable()">
+          <option v-for="iface in from.getIfaceList().filter((iface) => !iface.port.isConnected())" :key="iface" :value="iface.port">
+            {{ iface.name }}
           </option>
         </select>
+        <p v-else>use free port</p>
       </div>
       <div class="flex flex-col gap-2 w-32">
         <h3>
           To: <b>{{ to.name ?? to.getNodeId() }}</b>
         </h3>
-        <select class="rounded" v-model="selection.to">
-          <option v-for="c in to.getFreeConnectors()" :key="c.id">
-            {{ c.id }}
+        <select class="rounded" v-model="selection.to" v-if="to.isAddressable()">
+          <option v-for="iface in to.getIfaceList().filter((iface) => !iface.port.isConnected())" :key="iface" :value="iface.port">
+            {{ iface.name }}
           </option>
         </select>
+        <p v-else>use free port</p>
       </div>
     </div>
   </base-dialog>

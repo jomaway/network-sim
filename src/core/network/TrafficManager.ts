@@ -22,7 +22,7 @@ export class TrafficManager {
     this.simulationTimeout = 1000
     this.pauseTraffic = false;
 
-    this.intervalID = null;
+    this.intervalID = window.setInterval(() => this.tick(), this.simulationTimeout);
     this.ticks = 0;
     this.timers = []
 
@@ -31,11 +31,11 @@ export class TrafficManager {
 
   init() {
     this.debug("Init TrafficManager");
-    this.intervalID = setInterval(() => this.tick(), this.simulationTimeout)
+    //this.intervalID = window.setInterval(() => this.tick(), this.simulationTimeout)
   }
 
   async notify(event: TrafficEvent, component?: any ) {
-    if (event === TrafficEvent.LinkActive) {
+    if (event) {
       const end = this.ticks+1;
       while (this.ticks < end) {
         await sleep(this.simulationTimeout)
@@ -71,7 +71,7 @@ export class TrafficManager {
   setSimulationTimeout(ms:number) {
     this.simulationTimeout = ms;
     clearInterval(this.intervalID)
-    this.intervalID = setInterval(() => this.tick(), this.simulationTimeout)
+    this.intervalID = window.setInterval(() => this.tick(), this.simulationTimeout)
   }
 
   setTimer(cb: Function, ticks: number): number {

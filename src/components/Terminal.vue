@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { Node } from "@/core/network/components/Node";
+import { Host } from "../core/network/components/Host";
 
 const props = defineProps({
   node: {
-    type: Node,
+    type: Host,
     required: true,
   },
 });
@@ -64,12 +64,12 @@ async function runCommand(input) {
       break;
     case "ping": {
       output.value = [`$ ping ${args} ...`];
-      const retVal = await props.node.ping(args);
+      const retVal = await props.node.commandHandler.ping(args);
       output.value.push(retVal);
       break;
     }
     case "ip":
-      output.value = ["$ ip info", props.node.getIpConfig()];
+      output.value = ["$ ip info", props.node.commandHandler.ipconfig()];
       break;
     default:
       output.value = ["Command not found: " + input];

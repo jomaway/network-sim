@@ -1,11 +1,12 @@
-import { Node, NodeID, NodeType } from "./components/Node";
+import { NodeID, NodeType } from "./components/NetworkComponents";
+import { Node } from "./components/Node"
 import { Host } from "./components/Host";
 import { Switch } from "./components/Switch";
 import { Router } from "./components/Router";
-import { Link, LinkID } from "./components/Link";
-import { Connectable, Connector } from "./components/Connector";
-import TM, { TrafficManager } from "./TrafficManager";
 import { Cloud } from "./components/Cloud";
+import { Link, LinkID } from "./components/Link";
+import { Port } from "./components/Port";
+import TM, { TrafficManager } from "./TrafficManager";
 
 export class NetworkManager {
   nodes: Array<Node>
@@ -36,7 +37,7 @@ export class NetworkManager {
   }
 
   getCloud() : Cloud {
-    return this.nodes.find((node) => node.id === -100) as Cloud
+    return this.nodes.find((node) => node.getNodeType() === NodeType.Cloud) as Cloud
   }
 
   addNode(node: Node) {
@@ -45,13 +46,12 @@ export class NetworkManager {
 
   removeNode(node: Node) {
     // check if node is connected
-    node.connectors.forEach((c) => {
-      if(c.isConnected()) {
-        // remove Link
-        this.removeLink(c.link)
-      }
-    })
-
+    // disconnect all links from the node first.
+    const links = node.getConnectedLinks()
+    links.forEach((link: Link) => this.removeLink(link));
+    // nodes should be disconnected if links are removed but better safe than sorry
+    node.disconnectAllLinks();
+    // remove from list.
     this.nodes.splice(this.nodes.indexOf(node),1)
   }
 
@@ -77,15 +77,18 @@ export class NetworkManager {
     return r
   }
 
-  addLink(from: Connector | Connectable, to: Connector | Connectable) {
+  addLink(from: Port, to: Port) {
     // Get Free connectors
-    const c1 = from instanceof Connector ? from : from.getNextFreeConnector()
-    const c2 = to instanceof Connector ? to : to.getNextFreeConnector()
+    //const c1 = from instanceof Connector ? from : from.getNextFreeConnector()
+    //const c2 = to instanceof Connector ? to : to.getNextFreeConnector()
     
-    if ( c1 && c2 && !c1.isConnected() && !c2.isConnected()) {
-      const link = new Link(`l${this.getNextID()}`, c1,c2)
+    const p1 = from;
+    const p2 = to;
+
+    if ( p1 && p2 && !p1.isConnected() && !p2.isConnected()) {
+      const link = new Link(`l${this.getNextID()}`, p1,p2)
       this.links.push(link)
-    } else {
+    } else {      
       throw new Error("Could not add link")
     }
   }
@@ -103,7 +106,7 @@ export class NetworkManager {
     return ++this.lastUsedID
   }
 
-  getNodeByID(id: NodeID) : Node {
+  getNodeByID(id: NodeID) : Node | undefined {
     if (typeof(id) === "string") {
       id = parseInt(id)
     }
@@ -119,7 +122,7 @@ export class NetworkManager {
   }
 
   getAllFromType(nodeType: NodeType) {
-    return this.nodes.filter((node) => node.getNodeType() === nodeType)
+    return this.nodes.filter((node) => node.isType(nodeType))
   }
 
   getAllHosts() : Host[] {
@@ -130,18 +133,7 @@ export class NetworkManager {
     return this.getAllFromType(NodeType.Router).map((node) => node as Router)
   }
 
-  randomIPs() {
-    const hosts = this.getAllHosts()
-    const tmp = []
-
-    hosts.forEach((host) => {
-      const randomIp = "10.13.200." + Math.floor(Math.random() * 255 )
-      host.setIpAddr(randomIp)
-      tmp.push(randomIp)
-    })
-  }
-
-  saveNetwork() : string {
+  saveNetwork() : object {
     let result = {}
     result["lastUsedID"] = this.lastUsedID
     result["nodes"] = this.nodes.map((node) => {
@@ -150,15 +142,15 @@ export class NetworkManager {
 
     result["links"] = this.links.map((link) => {
       let l = {}
-      l["c1"] = link.c1.owner.getNodeID()
-      l["c2"] = link.c2.owner.getNodeID()
+      l["p1"] = link.p1.node.getNodeID()
+      l["p2"] = link.p2.node.getNodeID()
       return l
     })
 
-    return JSON.stringify(result)
+    return result
   }
 
-  loadNetwork(data) {
+  loadNetwork(data: any) {
     // reset components
     this.nodes = []
     this.links = []
@@ -172,7 +164,7 @@ export class NetworkManager {
           n = new Host(node.id, node.name)
           break;
         case NodeType.Switch:
-          n = new Switch(node.id, node.portCount)
+          n = new Switch(node.id, 10)
           break;
         case NodeType.Router:
           n = new Router(node.id)
@@ -188,10 +180,11 @@ export class NetworkManager {
       this.addNode(n)
     });
     // Load links
-    data.links.forEach((link) => {
-      const n1 = this.getNodeByID(link.c1);
-      const n2 = this.getNodeByID(link.c2);
-      this.addLink(n1, n2);
+    data.links.forEach((link: {p1: NodeID, p2: NodeID}) => {
+      const n1 = this.getNodeByID(link.p1);
+      const n2 = this.getNodeByID(link.p2);
+
+      this.addLink(n1.getNextFreePort(), n2.getNextFreePort());
     });
   }
 

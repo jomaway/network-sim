@@ -1,85 +1,51 @@
-import { Frame, MacAddr } from "../protocols/Ethernet"
-import { Link, LinkID } from "./Link"
-import { Node, NodeID, NodeType } from "./Node"
-import { NodeIcon } from "./Drawable"
-import { Connector } from "./Connector"
+import { NodeID, NodeType } from "./NetworkComponents";
+
+import { Port } from "./Port";
+import { Link } from "./Link";
+import { MediaAccessControll, SwitchPortController } from "../protocols/networkStack";
+import { Node } from "./Node";
 
 export class Switch extends Node {
-  name: string
-  portCount: number;
-  macTable: Map<LinkID,Array<MacAddr>>;
+  ports: Array<Port>;
+  maController: SwitchPortController;
 
   constructor(id: NodeID, ports: number) {
-    super(id)
-    this.name = `Switch-${ports}`
-    this.portCount = ports;
-    this.macTable = new Map()
+    super(id);
+    this.name = `Switch-${ports}`;
+    this.ports = []
+    this.maController = new SwitchPortController(this)
     for (let i = 0; i < ports; i++) {
-      this.addConnector()
+      // hook up each port with the SwitchPortController
+      this.ports.push(new Port(this))
     }
-
-    // add Drawable
-    this.drawable = new NodeIcon("#65A30D","rect")
   }
 
-  receive(orig: Connector, frame: Frame) {
-    //console.log(`${this.name} - received frame (${frame.src} -> ${frame.dst})`);
-    //this.tm?.emit("NodeActive",`${this.name} - received frame (${frame.src} -> ${frame.dst})`)
-    // Add src to macTable
-    if (frame.src !== "FF-FF-FF-FF-FF-FF") {
-      this.addtoMacTable(orig.id, frame.src)
-    }
-    
-    // Lookup dst MAC Addr
-    const dstPortID = this.lookupMac(frame.dst)
-    if (dstPortID) {
-      this.connectors.find((c) => c.id === dstPortID ).tx(frame)
-    } else {
-      // Broadcast message
-      this.connectors.filter((c : Connector) => c.isConnected())
-      .forEach((c: Connector) => {
-        if (c !== orig ) c.tx(frame)
-      })
-    }
-  };
-
-  addtoMacTable(portID: LinkID, macAddr: MacAddr) {
-    this.macTable.has(portID) ? 
-      this.macTable.set(portID, [... new Set([macAddr, ...this.macTable.get(portID)])]) :
-      this.macTable.set(portID, [macAddr]);
-  }
-
-  lookupMac(macAddr: MacAddr) {
-    for (const [key, value] of this.macTable) {
-      if (value.includes(macAddr)) {
-        return key
-      }
-    }
-    return null
-  }
-
-  getName(): string {
-    return this.name
-  }
-
-  setName(name: string): void {
-    this.name = name
+  isAddressable(): boolean {
+    return false;
   }
 
   getNodeType(): NodeType {
       return NodeType.Switch
   }
 
-  /* ---------- Storage methods  ----------*/
-
-  save() {
-    let n = super.save()
-      n["name"] = this.name
-      n["portCount"] = this.portCount
-      return n
+  disconnectAllLinks(): void {
+    this.ports.forEach((port: Port) => port.disconnect());
   }
 
-  load(data: any) {
-    super.load(data)
+  getConnectedLinks() : Array<Link> {
+    return this.ports.filter((port: Port) => port.isConnected()).map((port: Port) => port.link );
+  }
+
+  getMediaAccessControll(): MediaAccessControll {
+    return this.maController;
+  }
+
+  hasFreePort(): boolean {
+    return this.ports.find((port: Port) => !port.isConnected()) !== undefined;
+    //return this.networkInterfaces.filter((iface: NetworkInterface) => !iface.port.isConnected()).length > 0;
+  }
+
+  getNextFreePort(): Port {
+    return this.ports.find((port: Port) => !port.isConnected())
   }
 }

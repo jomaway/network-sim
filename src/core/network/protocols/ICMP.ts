@@ -1,8 +1,6 @@
-import { Service, SID } from "./Services";
-import { Host } from "../components/Host";
-import { IPv4Addr,  Packet } from "../protocols/IPv4";
+import { AddressableNode } from "../components/AddressableNode";
+import { IPv4Addr,  IpPacket, Protocol } from "./IPv4";
 import TM from "../TrafficManager";
-import { mdiThumbsUpDown } from "@mdi/js";
 import { sleep } from "../Helper";
 
 const ICMP_REQUEST = Symbol("icmp-req")
@@ -14,24 +12,20 @@ enum ResultType {
   error = "error",
 }
 
-export class ICMPHandler implements Service {
-  owner: Host
+export class ICMPHandler {
+  node: AddressableNode
   pending: Boolean
   result: ResultType
 
-  constructor(owner: Host ) {
-    this.owner = owner
+  constructor(node: AddressableNode ) {
+    this.node = node
     this.pending = false
     this.result = null
   }
 
-  getServiceID() {
-    return SID.ICMP
+  getAssociatedProtocol() {
+    return Protocol.ICMP
   };
-
-  sendRequest(dstIp: IPv4Addr){
-    this.sendIcmpRequest(dstIp)
-  }
 
   async ping(dstIp: IPv4Addr) {
     this.sendIcmpRequest(dstIp)
@@ -42,7 +36,7 @@ export class ICMPHandler implements Service {
     return this.result
   }
 
-  handleIpPacket(packet: Packet) {
+  handleIpPacket(packet: IpPacket) {
     // check if packet is request or response.
     if (packet.payload === ICMP_REQUEST.toString()) {
       this.handleIcmpRequest(packet)
@@ -54,24 +48,24 @@ export class ICMPHandler implements Service {
   };
 
   sendIcmpRequest(to: IPv4Addr) {
-    TM.log(`"ICMP:" ${this.owner.name} send ping request`)
-    const packet = new Packet(this.owner.getIpAddr(), to, SID.ICMP, ICMP_REQUEST.toString())
-    this.owner.sendPacket(packet)
+    TM.log(`"ICMP:" ${this.node.name} send ping request`)
+    const packet = new IpPacket(this.node.getDefaultIface().getIpAddr(), to, Protocol.ICMP, ICMP_REQUEST.toString())
+    this.node.ipHandler.sendPacket(packet)
   }
 
   sendIcmpResponse(to: IPv4Addr) {
-    TM.log(`"ICMP:" ${this.owner.name} send ping response`)
-    const packet = new Packet(this.owner.getIpAddr(), to, SID.ICMP, ICMP_RESPONSE.toString())
-    this.owner.sendPacket(packet)
+    TM.log(`"ICMP:" ${this.node.name} send ping response`)
+    const packet = new IpPacket(this.node.getDefaultIface().getIpAddr(), to, Protocol.ICMP, ICMP_RESPONSE.toString())
+    this.node.ipHandler.sendPacket(packet)
   }
 
-  handleIcmpRequest(packet: Packet) {
-    TM.log(`"ICMP:" ${this.owner.name} rcv ping request`)
+  handleIcmpRequest(packet: IpPacket) {
+    TM.log(`"ICMP:" ${this.node.name} rcv ping request`)
     this.sendIcmpResponse(packet.src)
   }
 
-  handleIcmpResponse(packet: Packet) {
-    TM.log(`"ICMP:" ${this.owner.name} rcv ping response`)
+  handleIcmpResponse(packet: IpPacket) {
+    TM.log(`"ICMP:" ${this.node.name} rcv ping response`)
     this.result = ResultType.success
   }
 }

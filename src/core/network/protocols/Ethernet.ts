@@ -1,5 +1,5 @@
 import { SID } from "../services/Services";
-import { Packet } from "./IPv4";
+import { IpPacket, Protocol } from "./IPv4";
 
 export type MacAddr = string;
 
@@ -27,13 +27,17 @@ export class Frame {
     return `Frame: \n  src: ${this.src} \n  dst: ${this.dst} \n  type: ${this.type === FrameType.IPv4 ? 'IPv4' : 'ARP'}`
   }
 
+  /**
+   * TODO! move to gui part. 
+   * @returns a label for the frame to display on the graph msg 
+   */
   getTypeLabel() {
     if (this.type === FrameType.IPv4) {
-      const packet = this.payload as Packet
-      switch (packet.sID) {
-        case SID.ICMP: return "ICMP"
-        case SID.DHCPClient: return "DHCP"
-        case SID.DHCPServer: return "DHCP"
+      const packet = this.payload as IpPacket
+      switch (packet.protocol) {
+        case Protocol.ICMP: return "ICMP"
+        case Protocol.DHCPClient: return "DHCP"
+        case Protocol.DHCPServer: return "DHCP"
         default: return "MSG"
       }
     } else {

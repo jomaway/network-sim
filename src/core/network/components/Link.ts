@@ -1,58 +1,55 @@
-import { NodeID } from './Node'
 import { Frame } from '../protocols/Ethernet'
-import TM, { TrafficEvent, TrafficManager } from '../TrafficManager';
-import { Connector } from './Connector';
+import TM, { TrafficEvent } from '../TrafficManager';
+import { Port } from './Port';
 
 export type LinkID = string;
 
 export class Link {
   id: string
-  c1: Connector
-  c2: Connector
-  tm: TrafficManager
+  p1: Port
+  p2: Port
   active: boolean
-  lastFrame: Frame
+  lastFrame: Frame | null
 
-  constructor(id: LinkID, c1: Connector, c2: Connector) {
+  constructor(id: LinkID, p1: Port, p2: Port) {
     this.id = id;
-    this.c1 = c1;
-    this.c2 = c2;
+    this.p1 = p1;
+    this.p2 = p2;
     this.connect()
     this.active = false
     this.lastFrame = null
   }
 
-
-
   connect() {
     // Connect Link to Connectors
     // todo! check if already connected
-    this.c1.connect(this)
-    this.c2.connect(this)
+    this.p1.connect(this)
+    this.p2.connect(this)
   }
 
   disconnect() {
-    this.c1.disconnect()
-    this.c2.disconnect()
+    this.p1.disconnect()
+    this.p2.disconnect()
   }
 
   swap() {
-    const tmp = this.c1 
-    this.c1 = this.c2
-    this.c2 = tmp
+    const tmp = this.p1 
+    this.p1 = this.p2
+    this.p2 = tmp
   }
 
-  async transfer(orig: Connector, frame: Frame) {
-    //const dest = (orig === this.c1) ? this.c2 : this.c1;
-    if (orig !== this.c1) {
+  async transfer(orig: Port, frame: Frame) {
+    if (orig !== this.p1) {
       this.swap()
     }
-    const dest = this.c2;
+    const dest = this.p2;
+    console.log(`transfer ${frame.dst}`)
     this.active = true
     this.lastFrame = frame
     await TM.notify(TrafficEvent.LinkActive, this)
-    dest.rx(frame)
     this.active=false
+    console.log(`transferEnd ${frame.dst}`)
+    dest.rx(frame)
   }
 
   isActive() {
