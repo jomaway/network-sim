@@ -10,13 +10,12 @@ defineProps({
 const emit = defineEmits(["confirm", "cancel"]);
 
 const onClose = () => {
-  emit("cancel")
-}
+  emit("cancel");
+};
 
 const onConfirm = (data) => {
-  emit("confirm", data)
-}
-
+  emit("confirm", data);
+};
 </script>
 
 <template>
@@ -34,7 +33,9 @@ const onConfirm = (data) => {
     <footer>
       <slot name="footer">
         <!-- Default -->
-        <button class="rounded p-2 text-sm bg-amber-400 " @click="onConfirm">Confirm</button>
+        <button class="rounded p-2 text-sm bg-amber-400" @click="onConfirm">
+          Confirm
+        </button>
       </slot>
     </footer>
   </div>

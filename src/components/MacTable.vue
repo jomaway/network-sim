@@ -1,5 +1,4 @@
 <script setup>
-
 defineProps({
   data: {
     type: Map,
@@ -18,9 +17,13 @@ defineProps({
         </tr>
       </thead>
       <tbody class="p-2">
-        <tr v-for="([key, value], index) in data" :key="key" class="border last:rounded-b">
-          <td>{{index}}</td>
-          <td class="px-4">{{value}}</td>
+        <tr
+          v-for="([key, value], index) in data"
+          :key="key"
+          class="border last:rounded-b"
+        >
+          <td>{{ index }}</td>
+          <td class="px-4">{{ value }}</td>
         </tr>
       </tbody>
     </table>

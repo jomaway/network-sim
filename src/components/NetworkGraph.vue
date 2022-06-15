@@ -14,8 +14,10 @@ import FilePickerDialog from "@/components/dialogs/FilePickerDialog.vue";
 import DialogWrapper from "@/components/dialogs/DialogWrapper.vue";
 import SettingsDialog from "./dialogs/SettingsDialog.vue";
 import MacTableDialog from "./dialogs/MacTableDialog.vue";
-import IconHost from "./icons/nodes/IconHost.vue";
 import IconCloud from "./icons/nodes/IconCloud.vue";
+import SwitchIcon from "@/assets/SwitchIcon.svg?component";
+import HostIcon from "@/assets/HostIcon.svg?component";
+import RouterIcon from "@/assets/RouterIcon.svg?component";
 
 defineProps({
   eventHandlers: Object,
@@ -405,8 +407,8 @@ const configs = reactive(
         color: (node) => node.color,
       },
       label: {
-        direction: "center",
-        color: "#ffffff",
+        direction: "south",
+        color: "#000000",
       },
     },
     edge: {
@@ -462,7 +464,7 @@ const calcLinkCenterPos = (link) => {
   >
     <!-- Replace the node component -->
     <template #override-node="{ nodeId, scale, config, ...slotProps }">
-      <IconCloud 
+      <icon-cloud
         x="-80"
         y="-60"
         width="160"
@@ -471,7 +473,7 @@ const calcLinkCenterPos = (link) => {
         v-if="nodeId === '-100'"
         v-bind="slotProps"
       />
-      <icon-host
+      <host-icon
         :width="60 * scale"
         :height="60 * scale"
         :x="-30 * scale"
@@ -479,7 +481,54 @@ const calcLinkCenterPos = (link) => {
         v-if="networkStore.getNodes[nodeId].type === NodeType.Host"
         v-bind="slotProps"
       />
-      <!-- Use v-html to interpret escape sequences for icon characters. -->
+      <switch-icon
+        :width="60 * scale"
+        :height="30 * scale"
+        :x="-30 * scale"
+        :y="-15 * scale"
+        v-if="networkStore.getNodes[nodeId].type === NodeType.Switch"
+      />
+      <router-icon
+        :width="60 * scale"
+        :height="30 * scale"
+        :x="-30 * scale"
+        :y="-15 * scale"
+        v-if="networkStore.getNodes[nodeId].type === NodeType.Router"
+      />
+    </template>
+    <!-- Replace the node labels -->
+    <template
+      #override-node-label="{
+        nodeId,
+        scale,
+        text,
+        x,
+        y,
+        config,
+        textAnchor,
+        dominantBaseline,
+      }"
+    >
+      <text
+        v-if="networkStore.getNodes[nodeId].type === NodeType.Host"
+        x="0"
+        y="0"
+        :font-size="9 * scale"
+        text-anchor="middle"
+        dominant-baseline="central"
+        fill="#ffffff"
+        >{{ text }}</text
+      >
+      <text
+        v-else
+        :x="x"
+        :y="y"
+        :font-size="config.fontSize * scale"
+        :text-anchor="textAnchor"
+        :dominant-baseline="dominantBaseline"
+        :fill="config.color"
+        >{{ text }}</text
+      >
     </template>
     <!-- Additional layer -->
     <template #msg="{ scale }" v-if="layers.msg">

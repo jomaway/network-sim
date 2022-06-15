@@ -33,19 +33,18 @@ const dhcpConf = computed({
   get: () => props.node.dhcpServer.getConfig(),
   set: (value) => props.node.dhcpServer.setConfig(value),
 });
-  
+
 const dhcpServerRunning = computed(() => props.node.dhcpServer.isRunning());
 
 const toogleDhcpServer = () => {
   dhcpServerRunning.value
     ? props.node.dhcpServer.stop()
     : props.node.dhcpServer.start();
-}
+};
 
 const close = () => {
   emit("close");
 };
-
 </script>
 
 <template>
@@ -75,9 +74,10 @@ const close = () => {
       </select>
     </div>
 
-    <network-interface-edit :iface="iface"/>
+    <network-interface-edit :iface="iface" />
 
-    <div v-if="node.getName() === 'Server'">  <!-- ugly workaround fix later. -->
+    <div v-if="node.getName() === 'Server'">
+      <!-- ugly workaround fix later. -->
       <div class="flex justify-between border-t pt-2">
         <h3 class="font-bold">DHCP-Server:</h3>
         <button
@@ -91,8 +91,12 @@ const close = () => {
 
       <div class="flex flex-col gap-1 mt-2">
         <ip-addr-input-field v-model="dhcpConf.first" label="Range-Start" />
-        <ip-addr-input-field v-model="dhcpConf.last"  label="Range-End" />
-        <ip-addr-input-field v-model="dhcpConf.snm" isMask label="Subnetzmaske" />
+        <ip-addr-input-field v-model="dhcpConf.last" label="Range-End" />
+        <ip-addr-input-field
+          v-model="dhcpConf.snm"
+          isMask
+          label="Subnetzmaske"
+        />
         <ip-addr-input-field v-model="dhcpConf.gw" label="Gateway" />
         <ip-addr-input-field v-model="dhcpConf.dns" label="DNS" />
         <p class="text-right">Running: {{ dhcpServerRunning ? "✔️" : "❌" }}</p>
