@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue';
-import { NetworkInterface } from '@/core/network/components/NetworkInterface';
+import { computed } from "vue";
+import { NetworkInterface } from "@/core/network/components/NetworkInterface";
 import IpAddrInputField from "./IpAddrInputField.vue";
 
 const props = defineProps({
@@ -28,7 +28,6 @@ const dns = computed({
 });
 
 const isStaticConfig = computed(() => props.iface.static);
-
 </script>
 
 <template>
@@ -38,10 +37,23 @@ const isStaticConfig = computed(() => props.iface.static);
       label="MAC-Adresse"
       disabled
     />
-    <ip-addr-input-field v-model="addr" label="IP-Adresse" :disabled="isStaticConfig" />
-    <ip-addr-input-field v-model="snm" isMask label="Subnetzmaske" :disabled="isStaticConfig"/>
-    <ip-addr-input-field v-model="gw" label="Gateway" :disabled="isStaticConfig"/>
-    <ip-addr-input-field v-model="dns" label="DNS" :disabled="isStaticConfig"/>
+    <ip-addr-input-field
+      v-model="addr"
+      label="IP-Adresse"
+      :disabled="isStaticConfig"
+    />
+    <ip-addr-input-field
+      v-model="snm"
+      isMask
+      label="Subnetzmaske"
+      :disabled="isStaticConfig"
+    />
+    <ip-addr-input-field
+      v-model="gw"
+      label="Gateway"
+      :disabled="isStaticConfig"
+    />
+    <ip-addr-input-field v-model="dns" label="DNS" :disabled="isStaticConfig" />
     <p class="text-right">Static: {{ isStaticConfig ? "✔️" : "❌" }}</p>
     <!--<check-box v-model="isStaticConfig" label="Static Config" class="justify-end"/>-->
   </div>

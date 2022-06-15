@@ -30,8 +30,18 @@ const selection = ref({
         <h3>
           From: <b>{{ from.name ?? from.getNodeId() }}</b>
         </h3>
-        <select class="rounded" v-model="selection.from" v-if="from.isAddressable()">
-          <option v-for="iface in from.getIfaceList().filter((iface) => !iface.port.isConnected())" :key="iface" :value="iface.port">
+        <select
+          class="rounded"
+          v-model="selection.from"
+          v-if="from.isAddressable()"
+        >
+          <option
+            v-for="iface in from
+              .getIfaceList()
+              .filter((iface) => !iface.port.isConnected())"
+            :key="iface"
+            :value="iface.port"
+          >
             {{ iface.name }}
           </option>
         </select>
@@ -41,8 +51,18 @@ const selection = ref({
         <h3>
           To: <b>{{ to.name ?? to.getNodeId() }}</b>
         </h3>
-        <select class="rounded" v-model="selection.to" v-if="to.isAddressable()">
-          <option v-for="iface in to.getIfaceList().filter((iface) => !iface.port.isConnected())" :key="iface" :value="iface.port">
+        <select
+          class="rounded"
+          v-model="selection.to"
+          v-if="to.isAddressable()"
+        >
+          <option
+            v-for="iface in to
+              .getIfaceList()
+              .filter((iface) => !iface.port.isConnected())"
+            :key="iface"
+            :value="iface.port"
+          >
             {{ iface.name }}
           </option>
         </select>

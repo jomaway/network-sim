@@ -25,9 +25,8 @@ const computedValue = computed({
 });
 
 const onEnter = () => {
- // do nothing yet
-}
-
+  // do nothing yet
+};
 </script>
 
 <template>

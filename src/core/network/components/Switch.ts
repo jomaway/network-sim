@@ -45,7 +45,11 @@ export class Switch extends Node {
     //return this.networkInterfaces.filter((iface: NetworkInterface) => !iface.port.isConnected()).length > 0;
   }
 
-  getNextFreePort(): Port {
+  getNextFreePort(): Port | undefined {
     return this.ports.find((port: Port) => !port.isConnected())
+  }
+
+  getMacTable() {
+    return this.maController.macTable
   }
 }
